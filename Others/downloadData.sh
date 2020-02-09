@@ -19,7 +19,7 @@ then
     then
         echo "The files are sucessfully unzipped"
         echo "The directory has below folders:"
-        ls -1 SmokeData/
+        ls -1
     else
         echo "error unzipping files"
     fi
