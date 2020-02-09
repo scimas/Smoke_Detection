@@ -6,7 +6,7 @@ fi
 
 echo "Downloading the data"
 
-wget "https://onedrive.live.com/?authkey=%21AFYQkl1tP%2DQh3Ek&id=2B888FC2F8F47809%21857&cid=2B888FC2F8F47809#authkey=%21AFYQkl1tP%2DQh3Ek&cid=2B888FC2F8F47809&id=2B888FC2F8F47809%21858&parId=2B888FC2F8F47809%21857&action=defaultclick" -O ../data/SmokeData.zip
+wget "https://ieqepw.by.files.1drv.com/y4mBVaHLVIHDjY09o07uLRZmexNgZuE8dkV3Xx9F4KMBDaiH4maWXYYf147972_oCOCILJ-SES8mS-rF_ui9OescSpvN_6Xl5vFXH-nfxvqn9oYzOts8eQvZJIOiyiU1APBPoLcAGzDqz8grr0sMCq22QYrmbmOE9BdenitNKBL-DYTtcVOiUNcHEevR5EEcyvVKSTy3yFNr1nP71CX3iL2wQ" -O ../data/SmokeData.zip
 
 
 if [ $? -eq 0 ]
