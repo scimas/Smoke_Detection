@@ -2,10 +2,7 @@ import torch
 
 from collections import namedtuple
 from math import floor
-from PIL import Image
 from torch import nn
-from torch.utils.data import Dataset
-from torchvision import transforms, utils
 
 ConvSize = namedtuple(
     "ConvSize",
