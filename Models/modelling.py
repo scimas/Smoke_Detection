@@ -17,7 +17,7 @@ ConvSize = namedtuple(
 class Classifier(nn.Module):
     def __init__(self, conv_sizes, fc_sizes):
         super(Classifier, self).__init__()
-        in_size = 28
+        in_size = 256
         out_size = 0
         conv_sizes.insert(0, ConvSize())
         self.layers = nn.ModuleDict()
