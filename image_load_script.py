@@ -7,6 +7,10 @@ import os
 import random
 
 
+
+import torch
+import torch.nn as nn
+
 from keras.utils import to_categorical
 from sklearn.model_selection import train_test_split
 from sklearn import metrics
@@ -40,3 +44,94 @@ X = np.array(image_arrays)
 
 x_train, x_test, y_train, y_test = train_test_split(X,Y, stratify = Y, test_size = 0.2, random_state= 42)
 x_train, x_validate, y_train, y_validate = train_test_split(x_train,y_train, stratify=y_train, test_size=0.1, random_state=40)
+
+
+# %% --------------------------------------- Set-Up --------------------------------------------------------------------
+device = nn.device("cuda:0" if torch.cuda.is_available() else "cpu")
+torch.manual_seed(42)
+np.random.seed(42)
+torch.backends.cudnn.deterministic = True
+torch.backends.cudnn.benchmark = False
+
+print("######The device is: ", device)
+LR = 0.05
+N_EPOCHS = 20
+BATCH_SIZE = 50
+DROPOUT = 0.5
+
+# %% -------------------------------------- CNN Class ------------------------------------------------------------------
+class CNN(nn.Module):
+    def __init__(self, DROPOUT):
+        super(CNN, self).__init__()
+        self.conv1 = nn.Conv2d(3, 32, kernel_size=(5, 5))
+        self.convnorm1 = nn.BatchNorm2d(32)
+        self.pool1 = nn.MaxPool2d(3)
+        self.conv2 = nn.Conv2d(32, 64, kernel_size= (3, 3))
+        self.convnorm2 = nn.BatchNorm2d(64)
+        self.pool2 = nn.MaxPool2d(3)
+        self.linear1 = nn.Linear(64*10*10, 400)
+        self.linear1_bn = nn.BatchNorm1d(400)
+        self.drop = nn.Dropout(DROPOUT)
+        self.linear2 = nn.Linear( 400, 7)
+        self.act = torch.relu
+
+    def forward(self, x):
+        x = self.pool1(self.convnorm1(self.act(self.conv1(x))))
+        x = self.pool2(self.convnorm2(self.act(self.conv2(x))))
+        x = self.drop(self.linear1_bn(self.act(self.linear1(x.view(len(x), -1)))))
+        return torch.sigmoid(self.linear2(x))
+
+model = CNN(DROPOUT).to(device)
+optimizer = torch.optim.SGD(model.parameters(), lr=LR)
+criterion = nn.CrossEntropyLoss()
+
+
+print("Starting training loop...")
+for epoch in range(N_EPOCHS):
+
+    loss_train = 0
+    model.train()
+    # m = nn.Sigmoid()
+    min_loss = 2
+    for batch in range(len(x_train)//BATCH_SIZE + 1):
+        inds = slice(batch*BATCH_SIZE, (batch+1)*BATCH_SIZE)
+        optimizer.zero_grad()
+        logits = model(x_train[inds])
+
+        loss = criterion(logits,y_train[inds])
+        loss.backward()
+        optimizer.step()
+        loss_train += loss.item()
+    if(min_loss > (loss_train/BATCH_SIZE)):
+        print("=> Saving a new best")
+        device = torch.device("cpu")
+        torch.save({
+            'model_state_dict': model.state_dict(),
+            'optimizer_state_dict': optimizer.state_dict(),
+            'learn_rate': LR,
+            "DROPOUT": DROPOUT
+        }, "model_smoke_detect.pt")
+        device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+        # torch.save(model.state_dict(),"model_kshitijbhat330.pt")
+    else:
+        print("=> Training loss did not improve")
+
+    model.eval()
+    print("Epoch {} | Train Loss {:.5f}".format(
+         epoch, loss_train / BATCH_SIZE))
+
+print("----------------Testing the model-------------------------")
+
+checkpoint = torch.load("model_smoke_detect.pt")
+device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+model = CNN(checkpoint['DROPOUT']).to(device)
+model.load_state_dict(checkpoint['model_state_dict'])
+optimizer = torch.optim.SGD(model.parameters(), lr = checkpoint['learn_rate'])
+optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
+
+model.eval()
+with torch.no_grad():
+    y_test_pred = model(x_test)
+    loss = criterion(y_test_pred, y_test)
+    loss_test = loss.item()
+print("Test Loss {:.5f}".format(loss_test))
