@@ -44,7 +44,7 @@ image_path_df.image_type.replace({"Cloud":0, "Dust": 1, "Haze": 2, "Land": 3, "S
 # Here I have calssified them as separate classes, but we have to find a way to work with multi-labeling.
 # Refer Dataset -> Classes section of the paper
 
-Y = to_categorical(image_path_df.image_type[:500])
+Y = image_path_df.image_type[:500].values
 X = np.array(image_arrays[:500])
 
 print("After converting to arrays: ", X.shape)
@@ -84,21 +84,22 @@ class CNN(nn.Module):
         super(CNN, self).__init__()
         self.conv1 = nn.Conv2d(3, 32, kernel_size=(5, 5)) # 252 x 252 x 32
         self.convnorm1 = nn.BatchNorm2d(32)
-        self.pool1 = nn.MaxPool2d(3) # 250 x 250 x 32
-        self.conv2 = nn.Conv2d(32, 64, kernel_size= (3, 3)) # 248 x 248 x 64
+        self.pool1 = nn.MaxPool2d(3) # 84 x 84 x 32
+        self.conv2 = nn.Conv2d(32, 64, kernel_size= (3, 3)) # 82 x 82 x 64
         self.convnorm2 = nn.BatchNorm2d(64)
-        self.pool2 = nn.MaxPool2d(3) # 246 x 246 x 64
-        self.linear1 = nn.Linear(64*246*246, 400)
+        self.pool2 = nn.MaxPool2d(3) # 27 x 27 x 64
+        self.linear1 = nn.Linear(64*27*27, 400)
         self.linear1_bn = nn.BatchNorm1d(400)
         self.drop = nn.Dropout(DROPOUT)
         self.linear2 = nn.Linear( 400, 6)
         self.act = torch.relu
+        self.flat = nn.Flatten()
 
     def forward(self, x):
         x = self.pool1(self.convnorm1(self.act(self.conv1(x))))
         x = self.pool2(self.convnorm2(self.act(self.conv2(x))))
-        x = self.drop(self.linear1_bn(self.act(self.linear1(x.view(len(x), -1)))))
-        return torch.sigmoid(self.linear2(x))
+        x = self.drop(self.linear1_bn(self.act(self.linear1(self.flat(x)))))
+        return self.linear2(x)
 
 model = CNN(DROPOUT).to(device)
 optimizer = torch.optim.SGD(model.parameters(), lr=LR)
@@ -117,7 +118,7 @@ for epoch in range(N_EPOCHS):
         optimizer.zero_grad()
         logits = model(x_train[inds])
 
-        loss = criterion(logits,y_train[inds])
+        loss = criterion(logits,y_train[inds].long())
         loss.backward()
         optimizer.step()
         loss_train += loss.item()
