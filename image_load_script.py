@@ -143,18 +143,18 @@ for epoch in range(N_EPOCHS):
     print("Epoch {} | Train Loss {:.5f}".format(
          epoch, loss_train / BATCH_SIZE))
 
-# print("----------------Testing the model-------------------------")
-# device = torch.device("cpu")
-# checkpoint = torch.load("model_smoke_detect.pt")
-# device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-# model = CNN(checkpoint['DROPOUT']).to(device)
-# model.load_state_dict(checkpoint['model_state_dict'])
-# optimizer = torch.optim.SGD(model.parameters(), lr = checkpoint['learn_rate'])
-# optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
-#
-# model.eval()
-# with torch.no_grad():
-#     y_test_pred = model(x_test.to(device))
-#     loss = criterion(y_test_pred, y_test.to(device))
-#     loss_test = loss.item()
-# print("Test Loss {:.5f}".format(loss_test))
+print("----------------Testing the model-------------------------")
+device = torch.device("cpu")
+checkpoint = torch.load("model_smoke_detect.pt")
+device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+model = CNN(checkpoint['DROPOUT']).to(device)
+model.load_state_dict(checkpoint['model_state_dict'])
+optimizer = torch.optim.SGD(model.parameters(), lr = checkpoint['learn_rate'])
+optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
+
+model.eval()
+with torch.no_grad():
+    y_test_pred = model(x_test.to(device))
+    loss = criterion(y_test_pred, y_test.to(device))
+    loss_test = loss.item()
+print("Test Loss {:.5f}".format(loss_test))
