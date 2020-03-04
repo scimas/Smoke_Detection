@@ -82,13 +82,13 @@ DROPOUT = 0.5
 class CNN(nn.Module):
     def __init__(self, DROPOUT):
         super(CNN, self).__init__()
-        self.conv1 = nn.Conv2d(3, 32, kernel_size=(5, 5))
+        self.conv1 = nn.Conv2d(3, 32, kernel_size=(5, 5)) # 252 x 252 x 32
         self.convnorm1 = nn.BatchNorm2d(32)
-        self.pool1 = nn.MaxPool2d(3)
-        self.conv2 = nn.Conv2d(32, 64, kernel_size= (3, 3))
+        self.pool1 = nn.MaxPool2d(3) # 250 x 250 x 32
+        self.conv2 = nn.Conv2d(32, 64, kernel_size= (3, 3)) # 248 x 248 x 64
         self.convnorm2 = nn.BatchNorm2d(64)
-        self.pool2 = nn.MaxPool2d(3)
-        self.linear1 = nn.Linear(64*248*248, 400)
+        self.pool2 = nn.MaxPool2d(3) # 246 x 246 x 64
+        self.linear1 = nn.Linear(64*246*246, 400)
         self.linear1_bn = nn.BatchNorm1d(400)
         self.drop = nn.Dropout(DROPOUT)
         self.linear2 = nn.Linear( 400, 6)
