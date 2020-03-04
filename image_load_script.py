@@ -17,17 +17,24 @@ from sklearn import metrics
 from PIL import Image
 from keras.preprocessing.image import  load_img, img_to_array
 
+# %% --------------------------------------- Set-Up --------------------------------------------------------------------
+device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+torch.manual_seed(42)
+np.random.seed(42)
+torch.backends.cudnn.deterministic = True
+torch.backends.cudnn.benchmark = False
 
 
 # Lets begin
 
-image_path_df = pd.read_csv("Image_paths.csv")
+image_path_df = pd.read_csv("Image_Paths.csv")
 print(image_path_df.head())
 
 image_arrays = []
 for p in image_path_df.image_path:
     im = load_img(p, color_mode="rgb",target_size=(256,256), interpolation="nearest")
-    img_array = img_to_array(im)
+    img_array = img_to_array(im).reshape(3,256,256)
+    #reshape array here
     image_arrays.append(img_array)
 
 print(image_arrays[0].shape)
@@ -37,8 +44,10 @@ image_path_df.image_type.replace({"Cloud":0, "Dust": 1, "Haze": 2, "Land": 3, "S
 # Here I have calssified them as separate classes, but we have to find a way to work with multi-labeling.
 # Refer Dataset -> Classes section of the paper
 
-Y = to_categorical(image_path_df.image_type)
-X = np.array(image_arrays)
+Y = to_categorical(image_path_df.image_type[:500])
+X = np.array(image_arrays[:500])
+
+print("After converting to arrays: ", X.shape)
 
 
 
@@ -46,12 +55,22 @@ x_train, x_test, y_train, y_test = train_test_split(X,Y, stratify = Y, test_size
 x_train, x_validate, y_train, y_validate = train_test_split(x_train,y_train, stratify=y_train, test_size=0.1, random_state=40)
 
 
-# %% --------------------------------------- Set-Up --------------------------------------------------------------------
-device = nn.device("cuda:0" if torch.cuda.is_available() else "cpu")
-torch.manual_seed(42)
-np.random.seed(42)
-torch.backends.cudnn.deterministic = True
-torch.backends.cudnn.benchmark = False
+x_train = torch.from_numpy(x_train).to(device)
+x_test = torch.from_numpy(x_test).to(device)
+y_train = torch.from_numpy(y_train).to(device)
+y_test = torch.from_numpy(y_test).to(device)
+x_validate = torch.from_numpy(x_validate).to(device)
+y_validate = torch.from_numpy(y_validate).to(device)
+
+
+# x_train = torch.from_numpy(x_train)
+# x_test = torch.from_numpy(x_test)
+# y_train = torch.from_numpy(y_train)
+# y_test = torch.from_numpy(y_test)
+# x_validate = torch.from_numpy(x_validate)
+# y_validate = torch.from_numpy(y_validate)
+
+
 
 print("######The device is: ", device)
 LR = 0.05
@@ -69,10 +88,10 @@ class CNN(nn.Module):
         self.conv2 = nn.Conv2d(32, 64, kernel_size= (3, 3))
         self.convnorm2 = nn.BatchNorm2d(64)
         self.pool2 = nn.MaxPool2d(3)
-        self.linear1 = nn.Linear(64*10*10, 400)
+        self.linear1 = nn.Linear(64*248*248, 400)
         self.linear1_bn = nn.BatchNorm1d(400)
         self.drop = nn.Dropout(DROPOUT)
-        self.linear2 = nn.Linear( 400, 7)
+        self.linear2 = nn.Linear( 400, 6)
         self.act = torch.relu
 
     def forward(self, x):
@@ -105,14 +124,17 @@ for epoch in range(N_EPOCHS):
     if(min_loss > (loss_train/BATCH_SIZE)):
         print("=> Saving a new best")
         device = torch.device("cpu")
+        model.to(device)
         torch.save({
             'model_state_dict': model.state_dict(),
             'optimizer_state_dict': optimizer.state_dict(),
             'learn_rate': LR,
             "DROPOUT": DROPOUT
         }, "model_smoke_detect.pt")
+
         device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-        # torch.save(model.state_dict(),"model_kshitijbhat330.pt")
+        model.to(device)
+
     else:
         print("=> Training loss did not improve")
 
@@ -120,18 +142,18 @@ for epoch in range(N_EPOCHS):
     print("Epoch {} | Train Loss {:.5f}".format(
          epoch, loss_train / BATCH_SIZE))
 
-print("----------------Testing the model-------------------------")
-
-checkpoint = torch.load("model_smoke_detect.pt")
-device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-model = CNN(checkpoint['DROPOUT']).to(device)
-model.load_state_dict(checkpoint['model_state_dict'])
-optimizer = torch.optim.SGD(model.parameters(), lr = checkpoint['learn_rate'])
-optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
-
-model.eval()
-with torch.no_grad():
-    y_test_pred = model(x_test)
-    loss = criterion(y_test_pred, y_test)
-    loss_test = loss.item()
-print("Test Loss {:.5f}".format(loss_test))
+# print("----------------Testing the model-------------------------")
+# device = torch.device("cpu")
+# checkpoint = torch.load("model_smoke_detect.pt")
+# device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+# model = CNN(checkpoint['DROPOUT']).to(device)
+# model.load_state_dict(checkpoint['model_state_dict'])
+# optimizer = torch.optim.SGD(model.parameters(), lr = checkpoint['learn_rate'])
+# optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
+#
+# model.eval()
+# with torch.no_grad():
+#     y_test_pred = model(x_test.to(device))
+#     loss = criterion(y_test_pred, y_test.to(device))
+#     loss_test = loss.item()
+# print("Test Loss {:.5f}".format(loss_test))
