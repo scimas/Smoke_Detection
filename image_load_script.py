@@ -35,13 +35,13 @@ train_valid_indices, test_indices = train_test_split(np.arange(len(image_path_df
 # Again, get its and training set's indices
 train_indices, valid_indices = train_test_split(train_valid_indices, test_size=0.2, stratify=image_path_df.image_type[train_valid_indices])
 
-train_data = SmokeDataset(image_path_df, train_indices)
+train_data = SmokeDataset(image_path_df, train_indices, train=True)
 train_loader = DataLoader(train_data, batch_size=64, shuffle=True, num_workers=4, pin_memory=torch.cuda.is_available())
 
-validation_data = SmokeDataset(image_path_df, valid_indices)
+validation_data = SmokeDataset(image_path_df, valid_indices, train=False)
 validation_loader = DataLoader(train_data, batch_size=256, shuffle=False, num_workers=4, pin_memory=torch.cuda.is_available())
 
-test_data = SmokeDataset(image_path_df, test_indices)
+test_data = SmokeDataset(image_path_df, test_indices, train=False)
 test_loader = DataLoader(train_data, batch_size=256, shuffle=False, num_workers=4, pin_memory=torch.cuda.is_available())
 
 print("######The device is: ", device)
