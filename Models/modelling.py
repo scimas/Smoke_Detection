@@ -3,6 +3,9 @@ import torch
 from collections import namedtuple
 from math import floor
 from torch import nn
+from PIL import Image
+from torch.utils.data import Dataset
+from torchvision.transforms import ToTensor
 
 ConvSize = namedtuple(
     "ConvSize",
@@ -60,3 +63,30 @@ class Classifier(nn.Module):
                 X = layer(X)
 
         return X
+
+
+class SmokeDataset(Dataset):
+    """
+    Extend PyTorch's Dataset for our specific purposes.
+    """
+    def __init__(self, path_df, image_ids, transform=None):
+        """
+        Load the images corresponding to `image_ids` as PIL's Image objects and the corresponding labels as a torch tensor.
+        """
+        self.X = [
+            Image.open(path).resize((230, 230), resample=Image.LANCZOS)
+            for path in path_df.loc[image_ids, "image_path"]
+        ]
+        self.y = torch.from_numpy(path_df.loc[image_ids, "image_type"].values)
+        if transform:
+            self.transform = transform
+        else:
+            self.transform = ToTensor()
+    
+
+    def __getitem__(self, idx):
+        return self.transform(self.X[idx]), self.y[idx]
+    
+
+    def __len__(self):
+        return len(self.y)
