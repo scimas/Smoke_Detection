@@ -1,2 +1,11 @@
 **/__pycache__
+.idea
+.vscode
+smokenet.pdf
+Cloud_eigen.png
+Dust_eigen.png  
+Haze_eigen.png  
+Land_eigen.png  
+Seaside_eigen.png  
+Smoke_eigen.png
 
