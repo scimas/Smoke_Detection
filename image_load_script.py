@@ -10,7 +10,7 @@ import torch.nn as nn
 
 from sklearn.model_selection import train_test_split
 from sklearn import metrics
-from Models.modelling import SmokeDataset
+from Models.SmokeDataset import SmokeDataset
 from torch.utils.data import DataLoader
 
 # %% --------------------------------------- Set-Up --------------------------------------------------------------------
@@ -114,20 +114,3 @@ for epoch in range(N_EPOCHS):
             print("=> Training loss did not improve")
         print("Epoch {} | Validation Loss {:.5f}".format(epoch, validation_loss))
 optimizer.zero_grad()
-
-print("----------------Testing the model-------------------------")
-device = torch.device("cpu")
-checkpoint = torch.load("model_smoke_detect.pt")
-device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-model = CNN(checkpoint['DROPOUT']).to(device)
-model.load_state_dict(checkpoint['model_state_dict'])
-
-with torch.no_grad():
-        test_loss = 0
-        model.eval()
-        for i, (images, labels) in enumerate(test_loader):
-            logits = model(images.to(device))
-            test_loss += criterion(logits,labels.to(device)).item() * len(labels)
-        # Average validation loss.
-        test_loss /= len(test_loader)
-print("Test Loss {:.5f}".format(test_loss))
