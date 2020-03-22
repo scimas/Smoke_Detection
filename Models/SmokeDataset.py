@@ -1,10 +1,7 @@
 import torch
-import torchvision.transofrms as tf
 
-from collections import namedtuple
-from math import floor
-from torch import nn
 from PIL import Image
+from torchvision import transforms as tf
 from torch.utils.data import Dataset
 
 
@@ -25,12 +22,10 @@ class SmokeDataset(Dataset):
             for path in path_df.loc[image_ids, "image_path"]
         ]
         self.y = torch.from_numpy(path_df.loc[image_ids, "image_type"].values)
-        self.transform = get_transform(train)
-    
+        self.transform = get_transforms(train)
 
     def __getitem__(self, idx):
         return self.transform(self.X[idx]), self.y[idx]
-    
 
     def __len__(self):
         return len(self.y)
