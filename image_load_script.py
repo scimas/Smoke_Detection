@@ -10,6 +10,7 @@ import random
 
 import torch
 import torch.nn as nn
+import torchvision as tv
 
 from keras.utils import to_categorical
 from sklearn.model_selection import train_test_split
@@ -33,7 +34,7 @@ print(image_path_df.head())
 image_arrays = []
 for p in image_path_df.image_path:
     im = load_img(p, color_mode="rgb",target_size=(256,256), interpolation="nearest")
-    img_array = img_to_array(im).reshape(3,256,256)
+    img_array = img_to_array(im).reshape(3,224,224)
     #reshape array here
     image_arrays.append(img_array)
 
