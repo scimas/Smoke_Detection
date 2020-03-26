@@ -8,7 +8,7 @@ import pandas as pd
 import torch
 import torch.nn as nn
 import torchvision as tv
-from load_image import train_data, test_data, validation_data
+from SmokeDataset import SmokeDataset
 from torch.utils.data import DataLoader
 
 # %% ------------------------------------ Define Class -----------------------------
@@ -18,6 +18,7 @@ class SmokeNet(nn.Module):
     def __init__(self, learn_rate = 0.001, n_epochs=20, batch_size = 50, dropout = 0.5):
         # Call weight and bias initializer
         # initialize learning rate
+        self.instance = SmokeDataset()
         self.learn_rate = learn_rate
         self.n_epochs = n_epochs
         self.batch_size = batch_size
@@ -94,13 +95,18 @@ class SmokeNet(nn.Module):
             x = layer(x)
         return x
         
-    def fit(self, train_data = train_data, validation_data=validation_data):
+    def fit(self, train_data , validation_data):
 
         device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
         torch.manual_seed(42)
         np.random.seed(42)
         torch.backends.cudnn.deterministic = True
         torch.backends.cudnn.benchmark = False
+
+        if not train_data:
+            train_data = self.instance.train_data
+        if not validation_data:
+            validation_data = self.instance.validation_data
 
 
         train_loader = DataLoader(train_data, batch_size=64, shuffle=True, num_workers=4, pin_memory=torch.cuda.is_available())
@@ -140,7 +146,10 @@ class SmokeNet(nn.Module):
                             print("=> Validation loss did not improve")
                             print("Epoch {} | Validation Loss {:.5f}".format(epoch, validation_loss))
 
-    def predict(self, test_data = test_data):
+    def predict(self, test_data):
+
+        if not test_data:
+            test_data =  self.instance.test_data
         
         # initialize test loader
         test_loader = DataLoader(test_data, batch_size=256, shuffle=False, num_workers=4, pin_memory=torch.cuda.is_available())
