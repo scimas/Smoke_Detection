@@ -10,11 +10,11 @@ import torch.nn as nn
 
 from sklearn.model_selection import train_test_split
 from sklearn import metrics
-from Models.modelling import SmokeDataset
+from Models.SmokeDataset import SmokeDataset
 from torch.utils.data import DataLoader
 
 # %% --------------------------------------- Set-Up --------------------------------------------------------------------
-device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+device = nn.device("cuda:0" if torch.cuda.is_available() else "cpu")
 torch.manual_seed(42)
 np.random.seed(42)
 torch.backends.cudnn.deterministic = True
