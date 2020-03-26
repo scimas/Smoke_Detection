@@ -39,13 +39,13 @@ class SmokeDataset(Dataset):
 
         train_indices, valid_indices = train_test_split(train_valid_indices, test_size=0.2, stratify=self.image_path_df.image_type[train_valid_indices])
 
-        self.train_data, self.train_labels = self.get_data(train_indices, train=True)
+        self.train_data = self.get_data(train_indices, train=True)
         # train_loader = DataLoader(train_data, batch_size=64, shuffle=True, num_workers=4, pin_memory=torch.cuda.is_available())
 
-        self.validation_data, self.validation_labels = self.get_data(valid_indices, train=False)
+        self.validation_data = self.get_data(valid_indices, train=False)
         # validation_loader = DataLoader(train_data, batch_size=256, shuffle=False, num_workers=4, pin_memory=torch.cuda.is_available())
 
-        self.test_data, self.test_labels = self.get_data(test_indices, train=False)
+        self.test_data = self.get_data(test_indices, train=False)
         # test_loader = DataLoader(train_data, batch_size=256, shuffle=False, num_workers=4, pin_memory=torch.cuda.is_available())
 
         
@@ -53,7 +53,7 @@ class SmokeDataset(Dataset):
 
 
     def get_data(self, image_ids=[], train=True):
-        
+
         if len(image_ids) == 0:
             image_ids = np.arange(len(self.image_path_df))
 
