@@ -11,6 +11,7 @@ import torch.nn as nn
 from sklearn.model_selection import train_test_split
 # from sklearn import metrics
 from Models.SmokeDataset import SmokeDataset
+from Models.SmokeNet import SmokeNet
 from torch.utils.data import DataLoader
 
 # Set-up
@@ -23,3 +24,7 @@ torch.backends.cudnn.benchmark = False
 
 
 dataset_instance = SmokeDataset()
+smoke = SmokeNet()
+smoke.fit(dataset_instance.train_data, dataset_instance.validation_data)
+smoke.predict(dataset_instance.test_data)
+
