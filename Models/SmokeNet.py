@@ -8,7 +8,7 @@ import pandas as pd
 import torch
 import torch.nn as nn
 import torchvision as tv
-from SmokeDataset import SmokeDataset
+from SmokeDataset import get_datasets
 from torch.utils.data import DataLoader
 
 # %% ------------------------------------ Define Class -----------------------------
@@ -18,7 +18,9 @@ class SmokeNet(nn.Module):
     def __init__(self, learn_rate = 0.001, n_epochs=20, batch_size = 50, dropout = 0.5):
         # Call weight and bias initializer
         # initialize learning rate
-        self.instance = SmokeDataset()
+
+
+
         self.learn_rate = learn_rate
         self.n_epochs = n_epochs
         self.batch_size = batch_size
@@ -102,15 +104,10 @@ class SmokeNet(nn.Module):
         np.random.seed(42)
         torch.backends.cudnn.deterministic = True
         torch.backends.cudnn.benchmark = False
-
-        if not train_data:
-            train_data = self.instance.train_data
-        if not validation_data:
-            validation_data = self.instance.validation_data
-
-
+        
+        #initialize train and validation data loaders
         train_loader = DataLoader(train_data, batch_size=64, shuffle=True, num_workers=4, pin_memory=torch.cuda.is_available())
-        validation_loader = DataLoader(train_data, batch_size=256, shuffle=False, num_workers=4, pin_memory=torch.cuda.is_available())
+        validation_loader = DataLoader(validation_data, batch_size=256, shuffle=False, num_workers=4, pin_memory=torch.cuda.is_available())
 
         print("######The device is: ", device)
         print("Starting training loop...")
@@ -141,16 +138,35 @@ class SmokeNet(nn.Module):
                             print("=> Saving a new best")
                             torch.save({
                                 'model_state_dict': self.state_dict(),
-                                'optimizer_state_dict': self.optimizer.state_dict()}, "model_smoke_detect.pt")
+                                'optimizer_state_dict': self.optimizer.state_dict()}, "model_smokenet.pt")
                         else:
                             print("=> Validation loss did not improve")
                             print("Epoch {} | Validation Loss {:.5f}".format(epoch, validation_loss))
 
-    def predict(self, test_data):
+    
+def predict(test_data):
+    # initialize test data loader
 
-        if not test_data:
-            test_data =  self.instance.test_data
-        
-        # initialize test loader
-        test_loader = DataLoader(test_data, batch_size=256, shuffle=False, num_workers=4, pin_memory=torch.cuda.is_available())
+    # test_loader = DataLoader(test_data, batch_size=256, shuffle=False, num_workers=4, pin_memory=torch.cuda.is_available())
 
+    #determine if cuda is available
+    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+
+    #initialize model
+    model = SmokeNet()
+
+    # load the saved model
+    checkpoint = torch.load("model_smokenet.pt")
+    model.load_state_dict(checkpoint['model_state_dict'])
+    optimizer = torch.optim.SGD(model.parameters(), lr=checkpoint['learn_rate'])
+    optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
+
+    x_test = test_data[1].to(device)
+
+    with torch.no_grad():
+        logits = model(x_test)
+        print(logits)
+        y_pred = torch.from_numpy((logits.cpu()>0.5).numpy()).float()
+        print(y_pred.shape)
+        print(y_pred)
+    return y_pred
