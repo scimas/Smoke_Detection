@@ -15,7 +15,7 @@ from torch.utils.data import DataLoader
 
 # W = np.random.rand((x_dim,y_dim))*np.sqrt(1/(ni+no))  -- Xavier initialization
 class SmokeNet(nn.Module):
-    def __init__(self, learn_rate = 0.001, n_epochs=20, batch_size = 50, dropout = 0.5):
+    def __init__(self, learn_rate = 0.001, n_epochs=20, batch_size = 50, dropout = 0.5, sc_cs = "SC"):
         # Call weight and bias initializer
         # initialize learning rate
 
@@ -27,6 +27,7 @@ class SmokeNet(nn.Module):
         self.dropout = dropout
         self.optimizer = torch.optim.SGD(self.parameters(), lr=self.learn_rate)
         self.criterion = nn.CrossEntropyLoss()
+        self.red_ratio = 16
      
         super(SmokeNet, self).__init__()
         # set the channels and dimensions later
@@ -40,9 +41,14 @@ class SmokeNet(nn.Module):
         self.conv3 = nn.Conv2d(64,256, kernel_size=(3,3), padding= 1)
         self.conv4 = nn.Conv2d(256,128, kernel_size=(1,1)) # 128 X 56 X 56
 
-        self.pool2 = nn.AvgPool2d(kernel_size=(1,1))
-
         #self.ra1
+        self.conv_ra1_1 = nn.Conv1d(128, int(128/self.red_ratio), 1)
+        self.conv_ra1_2 = nn.Conv1d(int(128/self.red_ratio), 1, 1)
+        relu = nn.ReLU()
+        sigmoid = nn.Sigmoid()
+
+
+        
         # global average pooling
         # Dense blocks for RA-SC here 
 
@@ -85,17 +91,49 @@ class SmokeNet(nn.Module):
         ## Final average pool 7 x 7, stride 1
 
 
-        self.layers = nn.ModuleList( [self.conv1, self.pool1 ,self.conv2,self.conv3, self.conv4,self.ra1,self.conv5, self.conv6, 
-        self.conv7, self.ra2, self.conv8, self.conv9, self.conv10, self.ra3,  self.conv11, self.conv12, self.conv13 , self.avgpool])
+        self.blocks = nn.ModuleList( [[self.conv1, self.pool1 ,self.conv2,self.conv3, self.conv4],[self.conv5, self.conv6, 
+        self.conv7], [self.conv8, self.conv9, self.conv10], [  self.conv11, self.conv12, self.conv13 ]])
 
         # fc
 
         # Apply softmax for  ROC in testing
-
+    
     def forward(self, x):
-        for layer in self.layers:
-            x = layer(x)
+        i = 0
+        for block in self.blocks:
+            for layer in self.layers:
+                x = layer(x)
+            H = W = 56/(2**i)
+            in_channels = 128*(2**i)
+            i+=1
+            x = x.reshape(-1, in_channels, H * W)
+            out_channels = int(in_channels / self.red_ratio)
+            # Spatial Attention
+            conv1 = nn.Conv1d(in_channels, out_channels, 1)
+            conv2 = nn.Conv1d(out_channels, 1, 1)
+            relu = nn.ReLU()
+            sigmoid = nn.Sigmoid()
+            s_attn_dist = sigmoid(conv2(relu(conv1(x))))
+            x = x * s_attn_dist
+            # This is almost what they call Q in the paper
+            # But it isn't in the C x W x H shape, it's in C x H*W shape
+            # Taking advantage of nn.AvgPool1d in Channelwise attention to avoid a reshape operation here
+            global_avg_pool = nn.AvgPool1d(H * W)
+
+            # Channelwise attention
+            lin1 = nn.Linear(in_channels, out_channels)
+            lin2 = nn.Linear(out_channels, in_channels)
+            c_attn = sigmoid(lin2(
+                relu(lin1(
+                    global_avg_pool(x).reshape(-1, in_channels)
+                ))
+            )).reshape(-1, in_channels, 1)
+            x = torch.reshape(x * c_attn, (-1, in_channels, H, W))
+
+        x = self.avgpool(x)
+
         return x
+
         
     def fit(self, train_data , validation_data):
 
@@ -165,8 +203,13 @@ def predict(test_data):
 
     with torch.no_grad():
         logits = model(x_test)
-        print(logits)
         y_pred = torch.from_numpy((logits.cpu()>0.5).numpy()).float()
-        print(y_pred.shape)
-        print(y_pred)
     return y_pred
+
+
+
+
+
+
+
+
