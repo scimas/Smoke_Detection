@@ -42,12 +42,7 @@ class SmokeNet(nn.Module):
         self.conv4 = nn.Conv2d(256,128, kernel_size=(1,1)) # 128 X 56 X 56
 
         #self.ra1
-        self.conv_ra1_1 = nn.Conv1d(128, int(128/self.red_ratio), 1)
-        self.conv_ra1_2 = nn.Conv1d(int(128/self.red_ratio), 1, 1)
-        relu = nn.ReLU()
-        sigmoid = nn.Sigmoid()
-
-
+        
         
         # global average pooling
         # Dense blocks for RA-SC here 
