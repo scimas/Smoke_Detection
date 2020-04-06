@@ -41,37 +41,41 @@ class SmokeNet(nn.Module):
         self.conv3 = nn.Conv2d(64,256, kernel_size=(3,3), padding= 1)
         self.conv4 = nn.Conv2d(256,128, kernel_size=(1,1)) # 128 X 56 X 56
 
-        #self.ra1
-        
-        
-        # global average pooling
-        # Dense blocks for RA-SC here 
+        # RA-SC/CS block
+        if self.sc_cs == "SC":
+           self.ra1 = Spatial_Attention(H=56,W=56,in_channels=128, red_ratio=16)
+           self.ra2 = Channel_Attention(H=56,W=56,in_channels=128, red_ratio=16)
+        else:
+            self.ra1 = Channel_Attention(H=56,W=56,in_channels=128, red_ratio=16)
+            self.ra2 = Spatial_Attention(H=56,W=56,in_channels=128, red_ratio=16)
+
 
         # Second block
         self.conv5 = nn.Conv2d(128,128, kernel_size=(1,1),stride = (2,2))
         self.conv6 = nn.Conv2d(128,128, kernel_size=(3,3), padding= 1)
         self.conv7 = nn.Conv2d(128,512, kernel_size=(1,1)) # 512 X 28 X 28
+        # RA-SC/CS block
 
-        self.pool3 = nn.AvgPool2d(kernel_size=(1,1))
-
-        # self.ra2
-        # global average pooling
-        # Dense block for RA-SC
-
-
+        if self.sc_cs == "SC":
+           self.ra3 = Spatial_Attention(H=28,W=28,in_channels=256, red_ratio=16)
+           self.ra4 = Channel_Attention(H=28,W=28,in_channels=256, red_ratio=16)
+        else:
+            self.ra3 = Channel_Attention(H=28,W=28,in_channels=256, red_ratio=16)
+            self.ra4 = Spatial_Attention(H=28,W=28,in_channels=256, red_ratio=16)
 
         # Third block 
+
         self.conv8 = nn.Conv2d(128,256 , kernel_size=(1,1), stride=(2,2))
         self.conv9 = nn.Conv2d(256,256, kernel_size = (3,3), padding=1)
         self.conv10 = nn.Conv2d(256,1024, kernel_size=(1,1))
 
-        self.pool4 = nn.AvgPool2d(kernel_size=(1,1))
-
-        # self.ra3
-        # global average pooling
-        # Dense block for RA-SC
-
-
+        # RA-SC/CS block
+        if self.sc_cs == "SC":
+           self.ra5 = Spatial_Attention(H=14,W=14,in_channels=512, red_ratio=16)
+           self.ra6 = Channel_Attention(H=14,W=14,in_channels=512, red_ratio=16)
+        else:
+            self.ra5 = Channel_Attention(H=14,W=14,in_channels=512, red_ratio=16)
+            self.ra6 = Spatial_Attention(H=14,W=14,in_channels=512, red_ratio=16)
 
         # Fourth Block
 
@@ -80,52 +84,19 @@ class SmokeNet(nn.Module):
         self.conv13 = nn.Conv2d(512,2048, kernel_size=(1,1))
 
         self.pool5 = nn.AvgPool2d(kernel_size=(7,7), stride=(1,1))
-
-        # self.avgpool
-
         ## Final average pool 7 x 7, stride 1
 
 
-        self.blocks = nn.ModuleList( [[self.conv1, self.pool1 ,self.conv2,self.conv3, self.conv4],[self.conv5, self.conv6, 
-        self.conv7], [self.conv8, self.conv9, self.conv10], [  self.conv11, self.conv12, self.conv13 ]])
+        self.layers = nn.ModuleList( [self.conv1, self.pool1 ,self.conv2,self.conv3, self.conv4, self.ra1, self.ra2,self.conv5, self.conv6, 
+        self.conv7,self.ra3,self.ra4,self.conv8, self.conv9, self.conv10,self.ra5,self.ra6, self.conv11, self.conv12, self.conv13, self.pool5 ])
 
         # fc
 
         # Apply softmax for  ROC in testing
     
     def forward(self, x):
-        i = 0
-        for block in self.blocks:
-            for layer in self.layers:
-                x = layer(x)
-            H = W = 56/(2**i)
-            in_channels = 128*(2**i)
-            i+=1
-            x = x.reshape(-1, in_channels, H * W)
-            out_channels = int(in_channels / self.red_ratio)
-            # Spatial Attention
-            conv1 = nn.Conv1d(in_channels, out_channels, 1)
-            conv2 = nn.Conv1d(out_channels, 1, 1)
-            relu = nn.ReLU()
-            sigmoid = nn.Sigmoid()
-            s_attn_dist = sigmoid(conv2(relu(conv1(x))))
-            x = x * s_attn_dist
-            # This is almost what they call Q in the paper
-            # But it isn't in the C x W x H shape, it's in C x H*W shape
-            # Taking advantage of nn.AvgPool1d in Channelwise attention to avoid a reshape operation here
-            global_avg_pool = nn.AvgPool1d(H * W)
-
-            # Channelwise attention
-            lin1 = nn.Linear(in_channels, out_channels)
-            lin2 = nn.Linear(out_channels, in_channels)
-            c_attn = sigmoid(lin2(
-                relu(lin1(
-                    global_avg_pool(x).reshape(-1, in_channels)
-                ))
-            )).reshape(-1, in_channels, 1)
-            x = torch.reshape(x * c_attn, (-1, in_channels, H, W))
-
-        x = self.avgpool(x)
+        for layer in self.layers:
+            x = layer(x)
 
         return x
 
@@ -203,6 +174,50 @@ def predict(test_data):
 
 
 
+class Spatial_Attention(nn.Module):
+    def __init__(self, H=56, W=56, in_channels=128, red_ratio=16):
+        self.in_channels = in_channels
+        self.H = H
+        self.W = W
+        self.out_channels = int(self.in_channels/red_ratio)
+        super(Spatial_Attention, self).__init__()
+        self.conv1 = nn.Conv1d(in_channels, self.out_channels, 1)
+        self.conv2 = nn.Conv1d(self.out_channels, 1, 1)
+        self.relu = nn.ReLU()
+        self.sig = nn.Sigmoid()
+
+        
+
+    def forward(self, x):
+        s_attn_dist = self.sigmoid(self.conv2(self.relu(self.conv1(x))))
+        x = x * s_attn_dist
+        return x
+
+class Channel_Attention(nn.Module):
+    def __init__(self, H=56, W=56, in_channels=128, red_ratio=16):
+        self.in_channels = in_channels
+        self.H = H
+        self.W = W
+        self.out_channels = int(self.in_channels/red_ratio)
+        super(Channel_Attention, self).__init__()
+
+        self.gavg = nn.AvgPool1d(H * W)
+        self.lin1 = nn.Linear(self.in_channels, self.out_channels)
+        self.lin2 = nn.Linear(self.out_channels,self.in_channels)
+        self.relu = nn.ReLU()
+        self.sig = nn.Sigmoid()
+
+    def forward(self, x):
+        c_att = self.sig(
+            self.lin2(
+                self.relu(
+                    self.lin1(
+                        self.gavg(x).reshape(-1, self.in_channels))
+                    )
+                )
+            ).reshape(-1, self.in_channels, 1)
+        x = torch.reshape(x * c_att, (-1, self.in_channels, self.H, self.W))
+        return x
 
 
 
