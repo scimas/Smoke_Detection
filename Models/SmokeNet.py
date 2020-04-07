@@ -220,6 +220,120 @@ class Channel_Attention(nn.Module):
         return x
 
 
+class ResidualBlock(nn.Module):
+    def __init__(self, in_channels:int, out_channels:int, downsample:bool):
+        super(ResidualBlock, self).__init__()
+        if downsample:
+            conv1 = nn.Conv2d(in_channels, out_channels, (3, 3), stride=(2, 2), padding=(1, 1))
+            shortcut = nn.Sequential(
+                nn.Conv2d(in_channels, out_channels, (1, 1), stride=(2, 2)),
+                nn.BatchNorm2d(out_channels)
+            )
+        else:
+            conv1 = nn.Conv2d(in_channels, out_channels, (3, 3), padding=(1, 1))
+            if in_channels != out_channels:
+                shortcut = nn.Sequential(
+                    nn.Conv2d(in_channels, out_channels, (1, 1)),
+                    nn.BatchNorm2d(out_channels)
+                )
+            else:
+                shortcut = nn.Identity()
+        self.shortcut = shortcut
+        act1 = nn.ReLU()
+        norm1 = nn.BatchNorm2d(out_channels)
+        normact = nn.ReLU()
+        conv2 = nn.Conv2d(out_channels, out_channels, (3, 3), padding=(1, 1))
+        act2 = nn.ReLU()
+        self.norm = nn.BatchNorm2d(out_channels)
+        self.layers = nn.Sequential(
+            conv1, act1, norm1, normact, conv2, act2
+        )
+    
+    def forward(self, x):
+        out1 = self.shortcut(x)
+        out2 = self.layers(x)
+        return self.norm(out1 + out2)
 
 
+def make_RA_block(channels:int, height:int, width:int, variant:str):
+    variant = variant.lower()
+    if variant = "sc":
+        return nn.Sequential(
+            ResidualBlock(channels, channels, False),
+            SpatialAttention(height, width, channels),
+            Channel_Attention(height, width, channels)
+        )
+    else if variant = "cs":
+        return nn.Sequential(
+            ResidualBlock(channels, channels, False),
+            Channel_Attention(height, width, channels),
+            SpatialAttention(height, width, channels)
+        )
+    else:
+        raise ValueError("invalid RA block variant, can only be 'sc' or 'cs'")
 
+
+class ResidualAttention(nn.Module):
+    def __init__(self, channels:int, height:int, width:int, n:int, variant:str):
+        super(ResidualAttention, self).__init__()
+        # Top block
+        self.top_block = make_RA_block(channels, height, width, variant)
+        # Trunk branch
+        self.trunck_branch = nn.Sequential(
+            make_RA_block(channels, height, width, variant),
+            make_RA_block(channels, height, width, variant)
+        )
+        # Soft mask branch
+        self.soft_mask_branch = nn.ModuleDict()
+        # First pooling layer -> downsample to half size
+        self.soft_mask_branch["pool1"] = nn.MaxPool2d((2, 2), padding=(1, 1))
+        height, width = height//2, width//2
+        # First RA block after first downsample
+        self.soft_mask_branch["ra1"] = make_RA_block(channels, height, width, variant)
+        # The side RA block in soft mask branch
+        self.soft_mask_branch["side_ra"] = make_RA_block(channels, height, width, variant)
+        # `n` downsamplers
+        downsamplers = nn.ModuleList()
+        for i in range(n):
+            downsamplers.append(nn.MaxPool2d((2, 2), padding=(1, 1)))
+            height, width = height//2, width//2
+            downsamplers.append(make_RA_block(channels, height, width, variant))
+        # Sometimes there is an extra RA block before upsamplers.
+        # Add a dummy identity if the RA block isn't needed: avoid an if check in forward
+        if n > 1:
+            ra_mid = make_RA_block(channels, height, width, variant)
+        else:
+            ra_mid = nn.Identity()
+        # `n` upsamplers
+        upsamplers = nn.ModuleList()
+        for i in range(n):
+            upsamplers.append(make_RA_block(channels, height, width, variant))
+            upsamplers.append(nn.Upsample(scale_factor=2, mode="linear"))
+            height, width = height*2, width*2
+        #Convert the downsamplers, ra_mid and upsamplers into an nn.Sequential
+        # Easier to execute in forward
+        self.soft_mask_branch["down-up"] = nn.Sequential(*downsamplers, ra_mid, *upsamplers)
+        # The bottom RA block
+        self.soft_mask_branch["ra2"] = make_RA_block(channels, height, width, variant)
+        # Final bilinear upsampling interpolation that undoes 'pool1' downsampling
+        self.soft_mask_branch["upsample"] = nn.Upsample(scale_factor=2, mode="bilinear")
+        # Final 1x1 convolutions and sigmoid
+        self.soft_mask_branch["convs"] = nn.Sequential(
+            nn.Conv2d(channels, channels, (1, 1)),
+            nn.Conv2d(channels, channels, (1, 1)),
+            nn.Sigmoid()
+        )
+    
+    def forward(self, x):
+        x = self.top_block(x)
+        out_trunk = self.trunck_branch(x)
+        # Soft mask calculations
+        out1 = self.soft_mask_branch["ra1"](
+            self.soft_mask_branch["pool1"](x)
+        )
+        out_side = self.soft_mask_branch["side_ra"](out1)
+        down_up = self.soft_mask_branch["down-up"](out1)
+        out_soft = self.soft_mask_branch["ra2"](out_side + down_up)
+        out_soft = self.soft_mask_branch["upsample"](out_soft)
+        out_soft = self.soft_mask_branch["convs"](out_soft)
+        return out_trunk * (1 + out_soft)
