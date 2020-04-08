@@ -108,25 +108,25 @@ class SmokeNet(nn.Module):
                 self.optimizer.step()
                 loss_train += loss.item() * len(labels)
 
-                # Average training loss. Less meaningful since model is being updated on each minibatch.
-                loss_train /= len(train_loader)
+            # Average training loss. Less meaningful since model is being updated on each minibatch.
+            loss_train /= len(train_loader)
             with torch.no_grad():
                 validation_loss = 0
                 self.eval()
                 for i, (images, labels) in enumerate(validation_loader):
                     logits = self.forward(images.to(device))
                     validation_loss += self.criterion(logits,labels.to(device)).item() * len(labels)
-                    # Average validation loss.
-                    validation_loss /= len(validation_loader)
-                    if validation_loss < min_validation_loss:
-                        min_validation_loss = validation_loss
-                        print("=> Saving a new best")
-                        torch.save({
-                            'model_state_dict': self.state_dict(),
-                            'optimizer_state_dict': self.optimizer.state_dict()}, "model_smokenet.pt")
-                    else:
-                        print("=> Validation loss did not improve")
-                        print("Epoch {} | Validation Loss {:.5f}".format(epoch, validation_loss))
+                # Average validation loss.
+                validation_loss /= len(validation_loader)
+                if validation_loss < min_validation_loss:
+                    min_validation_loss = validation_loss
+                    print("=> Saving a new best")
+                    torch.save({
+                        'model_state_dict': self.state_dict(),
+                        'optimizer_state_dict': self.optimizer.state_dict()}, "model_smokenet.pt")
+                else:
+                    print("=> Validation loss did not improve")
+                    print("Epoch {} | Validation Loss {:.5f}".format(epoch, validation_loss))
 
     
 def predict(test_data):
@@ -164,7 +164,6 @@ class Spatial_Attention(nn.Module):
         self.relu = nn.ReLU()
         self.sig = nn.Sigmoid()
 
-        
 
     def forward(self, x):
         x = x.reshape(-1, self.in_channels, self.H * self.W)
