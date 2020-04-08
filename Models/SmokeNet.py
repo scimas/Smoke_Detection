@@ -18,9 +18,6 @@ class SmokeNet(nn.Module):
     def __init__(self, learn_rate = 0.001, n_epochs=20, batch_size = 50, dropout = 0.5, sc_cs = "SC"):
         # Call weight and bias initializer
         # initialize learning rate
-
-
-
         self.learn_rate = learn_rate
         self.n_epochs = n_epochs
         self.batch_size = batch_size
@@ -41,14 +38,6 @@ class SmokeNet(nn.Module):
         self.conv3 = nn.Conv2d(64,256, kernel_size=(3,3), padding= 1)
         self.conv4 = nn.Conv2d(256,128, kernel_size=(1,1)) # 128 X 56 X 56
 
-        # # RA-SC/CS block
-        # if self.sc_cs == "SC":
-        #    self.ra1 = Spatial_Attention(H=56,W=56,in_channels=128, red_ratio=16)
-        #    self.ra2 = Channel_Attention(H=56,W=56,in_channels=128, red_ratio=16)
-        # else:
-        #     self.ra1 = Channel_Attention(H=56,W=56,in_channels=128, red_ratio=16)
-        #     self.ra2 = Spatial_Attention(H=56,W=56,in_channels=128, red_ratio=16)
-
         self.ra1 = ResidualAttention(channels=128,height=56,width=56,n=2,variant=sc_cs)
 
         # Second block
@@ -57,12 +46,6 @@ class SmokeNet(nn.Module):
         self.conv7 = nn.Conv2d(128,512, kernel_size=(1,1)) # 512 X 28 X 28
         # RA-SC/CS block
 
-        # if self.sc_cs == "SC":
-        #    self.ra3 = Spatial_Attention(H=28,W=28,in_channels=256, red_ratio=16)
-        #    self.ra4 = Channel_Attention(H=28,W=28,in_channels=256, red_ratio=16)
-        # else:
-        #     self.ra3 = Channel_Attention(H=28,W=28,in_channels=256, red_ratio=16)
-        #     self.ra4 = Spatial_Attention(H=28,W=28,in_channels=256, red_ratio=16)
         self.ra2 = ResidualAttention(channels=256,height=28,width=28,n=1,variant=sc_cs)
 
         # Third block 
@@ -72,12 +55,6 @@ class SmokeNet(nn.Module):
         self.conv10 = nn.Conv2d(256,1024, kernel_size=(1,1))
 
         # RA-SC/CS block
-        # if self.sc_cs == "SC":
-        #    self.ra5 = Spatial_Attention(H=14,W=14,in_channels=512, red_ratio=16)
-        #    self.ra6 = Channel_Attention(H=14,W=14,in_channels=512, red_ratio=16)
-        # else:
-        #     self.ra5 = Channel_Attention(H=14,W=14,in_channels=512, red_ratio=16)
-        #     self.ra6 = Spatial_Attention(H=14,W=14,in_channels=512, red_ratio=16)
 
         self.ra3 = ResidualAttention(channels=512,height=14,width=14,n=0,variant=sc_cs)
 
@@ -155,7 +132,6 @@ class SmokeNet(nn.Module):
 def predict(test_data):
     # initialize test data loader
 
-    # test_loader = DataLoader(test_data, batch_size=256, shuffle=False, num_workers=4, pin_memory=torch.cuda.is_available())
 
     #determine if cuda is available
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
@@ -165,9 +141,7 @@ def predict(test_data):
 
     # load the saved model
     checkpoint = torch.load("model_smokenet.pt")
-    # model.load_state_dict(checkpoint['model_state_dict'])
-    # optimizer = torch.optim.SGD(model.parameters(), lr=checkpoint['learn_rate'])
-    # optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
+    model.load_state_dict(checkpoint['model_state_dict'])
 
     x_test = test_data[1].to(device)
 
