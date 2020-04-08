@@ -33,5 +33,4 @@ y_true = testing_data[:][1].tolist()
 
 
 print("The cohen kappa score is:", cohen_kappa_score(y_true, y_pred))
-print("The f1_score score is:", f1_score(y_true, y_pred))
-
+print("The f1_score score is:", f1_score(y_true, y_pred, average="macro"))
