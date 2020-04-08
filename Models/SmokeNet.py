@@ -263,13 +263,13 @@ class ResidualBlock(nn.Module):
 
 def make_RA_block(channels:int, height:int, width:int, variant:str):
     variant = variant.lower()
-    if variant == "SC":
+    if variant == "sc":
         return nn.Sequential(
             ResidualBlock(channels, channels, False),
             Spatial_Attention(height, width, channels),
             Channel_Attention(height, width, channels)
         )
-    elif variant == "CS":
+    elif variant == "cs":
         return nn.Sequential(
             ResidualBlock(channels, channels, False),
             Channel_Attention(height, width, channels),
