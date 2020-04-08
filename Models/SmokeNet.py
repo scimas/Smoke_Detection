@@ -41,14 +41,15 @@ class SmokeNet(nn.Module):
         self.conv3 = nn.Conv2d(64,256, kernel_size=(3,3), padding= 1)
         self.conv4 = nn.Conv2d(256,128, kernel_size=(1,1)) # 128 X 56 X 56
 
-        # RA-SC/CS block
-        if self.sc_cs == "SC":
-           self.ra1 = Spatial_Attention(H=56,W=56,in_channels=128, red_ratio=16)
-           self.ra2 = Channel_Attention(H=56,W=56,in_channels=128, red_ratio=16)
-        else:
-            self.ra1 = Channel_Attention(H=56,W=56,in_channels=128, red_ratio=16)
-            self.ra2 = Spatial_Attention(H=56,W=56,in_channels=128, red_ratio=16)
+        # # RA-SC/CS block
+        # if self.sc_cs == "SC":
+        #    self.ra1 = Spatial_Attention(H=56,W=56,in_channels=128, red_ratio=16)
+        #    self.ra2 = Channel_Attention(H=56,W=56,in_channels=128, red_ratio=16)
+        # else:
+        #     self.ra1 = Channel_Attention(H=56,W=56,in_channels=128, red_ratio=16)
+        #     self.ra2 = Spatial_Attention(H=56,W=56,in_channels=128, red_ratio=16)
 
+        self.ra1 = ResidualAttention(channels=128,height=56,width=56,n=2,variant=sc_cs)
 
         # Second block
         self.conv5 = nn.Conv2d(128,128, kernel_size=(1,1),stride = (2,2))
@@ -56,12 +57,13 @@ class SmokeNet(nn.Module):
         self.conv7 = nn.Conv2d(128,512, kernel_size=(1,1)) # 512 X 28 X 28
         # RA-SC/CS block
 
-        if self.sc_cs == "SC":
-           self.ra3 = Spatial_Attention(H=28,W=28,in_channels=256, red_ratio=16)
-           self.ra4 = Channel_Attention(H=28,W=28,in_channels=256, red_ratio=16)
-        else:
-            self.ra3 = Channel_Attention(H=28,W=28,in_channels=256, red_ratio=16)
-            self.ra4 = Spatial_Attention(H=28,W=28,in_channels=256, red_ratio=16)
+        # if self.sc_cs == "SC":
+        #    self.ra3 = Spatial_Attention(H=28,W=28,in_channels=256, red_ratio=16)
+        #    self.ra4 = Channel_Attention(H=28,W=28,in_channels=256, red_ratio=16)
+        # else:
+        #     self.ra3 = Channel_Attention(H=28,W=28,in_channels=256, red_ratio=16)
+        #     self.ra4 = Spatial_Attention(H=28,W=28,in_channels=256, red_ratio=16)
+        self.ra2 = ResidualAttention(channels=256,height=28,width=28,n=1,variant=sc_cs)
 
         # Third block 
 
@@ -70,12 +72,14 @@ class SmokeNet(nn.Module):
         self.conv10 = nn.Conv2d(256,1024, kernel_size=(1,1))
 
         # RA-SC/CS block
-        if self.sc_cs == "SC":
-           self.ra5 = Spatial_Attention(H=14,W=14,in_channels=512, red_ratio=16)
-           self.ra6 = Channel_Attention(H=14,W=14,in_channels=512, red_ratio=16)
-        else:
-            self.ra5 = Channel_Attention(H=14,W=14,in_channels=512, red_ratio=16)
-            self.ra6 = Spatial_Attention(H=14,W=14,in_channels=512, red_ratio=16)
+        # if self.sc_cs == "SC":
+        #    self.ra5 = Spatial_Attention(H=14,W=14,in_channels=512, red_ratio=16)
+        #    self.ra6 = Channel_Attention(H=14,W=14,in_channels=512, red_ratio=16)
+        # else:
+        #     self.ra5 = Channel_Attention(H=14,W=14,in_channels=512, red_ratio=16)
+        #     self.ra6 = Spatial_Attention(H=14,W=14,in_channels=512, red_ratio=16)
+
+        self.ra3 = ResidualAttention(channels=512,height=14,width=14,n=0,variant=sc_cs)
 
         # Fourth Block
 
@@ -87,8 +91,8 @@ class SmokeNet(nn.Module):
         ## Final average pool 7 x 7, stride 1
 
 
-        self.layers = nn.ModuleList( [self.conv1, self.pool1 ,self.conv2,self.conv3, self.conv4, self.ra1, self.ra2,self.conv5, self.conv6, 
-        self.conv7,self.ra3,self.ra4,self.conv8, self.conv9, self.conv10,self.ra5,self.ra6, self.conv11, self.conv12, self.conv13, self.pool5 ])
+        self.layers = nn.ModuleList( [self.conv1, self.pool1 ,self.conv2,self.conv3, self.conv4, self.ra1,self.conv5, self.conv6, 
+        self.conv7,self.ra2,self.conv8, self.conv9, self.conv10,self.ra3, self.conv11, self.conv12, self.conv13, self.pool5 ])
 
         # fc
 
@@ -129,23 +133,23 @@ class SmokeNet(nn.Module):
 
                 # Average training loss. Less meaningful since model is being updated on each minibatch.
                 loss_train /= len(train_loader)
-                with torch.no_grad():
-                    validation_loss = 0
-                    self.eval()
-                    for i, (images, labels) in enumerate(validation_loader):
-                        logits = self.forward(images.to(device))
-                        validation_loss += self.criterion(logits,labels.to(device)).item() * len(labels)
-                        # Average validation loss.
-                        validation_loss /= len(validation_loader)
-                        if validation_loss < min_validation_loss:
-                            min_validation_loss = validation_loss
-                            print("=> Saving a new best")
-                            torch.save({
-                                'model_state_dict': self.state_dict(),
-                                'optimizer_state_dict': self.optimizer.state_dict()}, "model_smokenet.pt")
-                        else:
-                            print("=> Validation loss did not improve")
-                            print("Epoch {} | Validation Loss {:.5f}".format(epoch, validation_loss))
+            with torch.no_grad():
+                validation_loss = 0
+                self.eval()
+                for i, (images, labels) in enumerate(validation_loader):
+                    logits = self.forward(images.to(device))
+                    validation_loss += self.criterion(logits,labels.to(device)).item() * len(labels)
+                    # Average validation loss.
+                    validation_loss /= len(validation_loader)
+                    if validation_loss < min_validation_loss:
+                        min_validation_loss = validation_loss
+                        print("=> Saving a new best")
+                        torch.save({
+                            'model_state_dict': self.state_dict(),
+                            'optimizer_state_dict': self.optimizer.state_dict()}, "model_smokenet.pt")
+                    else:
+                        print("=> Validation loss did not improve")
+                        print("Epoch {} | Validation Loss {:.5f}".format(epoch, validation_loss))
 
     
 def predict(test_data):
@@ -161,9 +165,9 @@ def predict(test_data):
 
     # load the saved model
     checkpoint = torch.load("model_smokenet.pt")
-    model.load_state_dict(checkpoint['model_state_dict'])
-    optimizer = torch.optim.SGD(model.parameters(), lr=checkpoint['learn_rate'])
-    optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
+    # model.load_state_dict(checkpoint['model_state_dict'])
+    # optimizer = torch.optim.SGD(model.parameters(), lr=checkpoint['learn_rate'])
+    # optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
 
     x_test = test_data[1].to(device)
 
@@ -191,7 +195,7 @@ class Spatial_Attention(nn.Module):
     def forward(self, x):
         x = x.reshape(-1, self.in_channels, self.H * self.W)
         s_attn_dist = self.sigmoid(self.conv2(self.relu(self.conv1(x))))
-        x = x * s_attn_dist
+        x = torch.reshape(x * s_attn_dist,  (-1, self.in_channels, self.H, self.W))
         return x
 
 class Channel_Attention(nn.Module):
@@ -259,13 +263,13 @@ class ResidualBlock(nn.Module):
 
 def make_RA_block(channels:int, height:int, width:int, variant:str):
     variant = variant.lower()
-    if variant == "sc":
+    if variant == "SC":
         return nn.Sequential(
             ResidualBlock(channels, channels, False),
             Spatial_Attention(height, width, channels),
             Channel_Attention(height, width, channels)
         )
-    elif variant == "cs":
+    elif variant == "CS":
         return nn.Sequential(
             ResidualBlock(channels, channels, False),
             Channel_Attention(height, width, channels),
