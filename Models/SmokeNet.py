@@ -189,6 +189,7 @@ class Spatial_Attention(nn.Module):
         
 
     def forward(self, x):
+        x = x.reshape(-1, self.in_channels, self.H * self.W)
         s_attn_dist = self.sigmoid(self.conv2(self.relu(self.conv1(x))))
         x = x * s_attn_dist
         return x
@@ -208,6 +209,7 @@ class Channel_Attention(nn.Module):
         self.sig = nn.Sigmoid()
 
     def forward(self, x):
+        x = x.reshape(-1, self.in_channels, self.H * self.W)
         c_att = self.sig(
             self.lin2(
                 self.relu(
@@ -257,17 +259,17 @@ class ResidualBlock(nn.Module):
 
 def make_RA_block(channels:int, height:int, width:int, variant:str):
     variant = variant.lower()
-    if variant = "sc":
+    if variant == "sc":
         return nn.Sequential(
             ResidualBlock(channels, channels, False),
-            SpatialAttention(height, width, channels),
+            Spatial_Attention(height, width, channels),
             Channel_Attention(height, width, channels)
         )
-    else if variant = "cs":
+    elif variant == "cs":
         return nn.Sequential(
             ResidualBlock(channels, channels, False),
             Channel_Attention(height, width, channels),
-            SpatialAttention(height, width, channels)
+            Spatial_Attention(height, width, channels)
         )
     else:
         raise ValueError("invalid RA block variant, can only be 'sc' or 'cs'")
