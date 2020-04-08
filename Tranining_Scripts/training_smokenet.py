@@ -27,7 +27,9 @@ class_weights, training_data, validation_data, testing_data = get_datasets()
 smoke = SmokeNet()
 smoke.fit(training_data, validation_data, class_weights)
 y_pred = smoke.predict(testing_data)
-y_true = testing_data[:][1]
+y_pred = torch.cat(y_pred)
+y_pred = torch.argmax(y_pred, axis=1).tolist()
+y_true = testing_data[:][1].tolist()
 
 
 print("The cohen kappa score is:", cohen_kappa_score(y_true, y_pred))
