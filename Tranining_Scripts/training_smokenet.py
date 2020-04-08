@@ -8,12 +8,9 @@ import numpy as np
 import torch
 import torch.nn as nn
 
-from sklearn.model_selection import train_test_split
 from sklearn.metrics import cohen_kappa_score, f1_score
 # from sklearn import metrics
-from Models.SmokeDataset import SmokeDataset
-from Models.SmokeNet import SmokeNet, predict
-from torch.utils.data import DataLoader
+from Models.SmokeNet import SmokeNet
 
 from Models.SmokeDataset import get_datasets
 
@@ -25,12 +22,10 @@ np.random.seed(42)
 torch.backends.cudnn.deterministic = True
 torch.backends.cudnn.benchmark = False
 
-
-
 class_weights, training_data, validation_data, testing_data = get_datasets()
 
 smoke = SmokeNet()
-smoke.fit(training_data, validation_data)
+smoke.fit(training_data, validation_data, class_weights)
 y_pred = predict(testing_data)
 y_true = testing_data[1]
 

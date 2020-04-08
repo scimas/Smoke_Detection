@@ -18,7 +18,7 @@ class SmokeNet(nn.Module):
         self.batch_size = batch_size
         self.dropout = dropout
         self.optimizer = torch.optim.SGD(self.parameters(), lr=self.learn_rate)
-        self.criterion = nn.CrossEntropyLoss()
+        self.criterion = None
         self.red_ratio = 16
 
         super(SmokeNet, self).__init__()
@@ -79,7 +79,12 @@ class SmokeNet(nn.Module):
     def forward(self, x):
         return self.layers(x)
 
-    def fit(self, train_data, validation_data):
+    def fit(self, train_data, validation_data, class_weights=None):
+        if self.criterion is None:
+            if class_weights is not None:
+                self.criterion = nn.CrossEntropyLoss(weight=class_weights)
+            else:
+                self.criterion = nn.CrossEntropyLoss()
         device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
         torch.manual_seed(42)
         np.random.seed(42)
