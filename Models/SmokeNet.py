@@ -193,7 +193,7 @@ class Channel_Attention(nn.Module):
 
 
 class ResidualBlock(nn.Module):
-    def __init__(self, in_channels:int, out_channels:int, downsample:bool):
+    def __init__(self, in_channels: int, out_channels: int, downsample: bool):
         super(ResidualBlock, self).__init__()
         if downsample:
             conv1 = nn.Conv2d(in_channels, out_channels, (3, 3), stride=(2, 2), padding=(1, 1))
@@ -227,7 +227,7 @@ class ResidualBlock(nn.Module):
         return self.norm(out1 + out2)
 
 
-def make_RA_block(channels:int, height:int, width:int, red_ratio:int, variant:str):
+def make_RA_block(channels: int, height: int, width: int, red_ratio: int, variant: str):
     variant = variant.lower()
     if variant == "sc":
         return nn.Sequential(
