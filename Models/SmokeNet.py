@@ -10,13 +10,12 @@ from torch.utils.data import DataLoader
 
 
 class SmokeNet(nn.Module):
-    def __init__(self, learn_rate=0.001, n_epochs=20, batch_size=50, dropout=0.5, sc_cs="SC"):
+    def __init__(self, learn_rate=0.001, n_epochs=20, batch_size=50, sc_cs="SC"):
         # Call weight and bias initializer
         # initialize learning rate
         self.learn_rate = learn_rate
         self.n_epochs = n_epochs
         self.batch_size = batch_size
-        self.dropout = dropout
         self.optimizer = None
         self.criterion = None
         self.red_ratio = 16
