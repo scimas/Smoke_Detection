@@ -281,7 +281,7 @@ class ResidualAttention(nn.Module):
         upsamplers = nn.ModuleList()
         for i in range(n):
             upsamplers.append(make_RA_block(channels, height, width, red_ratio, variant))
-            upsamplers.append(nn.Upsample(scale_factor=2, mode="bilinear"))
+            upsamplers.append(nn.Upsample(scale_factor=2, mode="bilinear", align_corners=False))
             height, width = height * 2, width * 2
         # Convert the downsamplers, ra_mid and upsamplers into an nn.Sequential
         # Easier to execute in forward
