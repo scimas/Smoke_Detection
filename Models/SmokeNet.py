@@ -81,7 +81,7 @@ class SmokeNet(nn.Module):
     def fit(self, train_data, validation_data, class_weights=None):
         if self.criterion is None:
             if class_weights is not None:
-                self.criterion = nn.CrossEntropyLoss(weight=class_weights)
+                self.criterion = nn.CrossEntropyLoss(weight=torch.tensor(class_weights))
             else:
                 self.criterion = nn.CrossEntropyLoss()
         if self.optimizer is None:
