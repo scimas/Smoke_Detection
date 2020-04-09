@@ -10,7 +10,7 @@ import torch.nn as nn
 
 from sklearn.metrics import cohen_kappa_score, f1_score
 # from sklearn import metrics
-from Models.SmokeNet import SmokeNet
+from Models.SmokeNet import SmokeNet, fit, predict
 
 from Models.SmokeDataset import get_datasets
 
@@ -24,12 +24,18 @@ torch.backends.cudnn.benchmark = False
 
 class_weights, training_data, validation_data, testing_data = get_datasets()
 
+learn_rate = 0.01
+n_epochs = 200
+batch_size = 32
 smoke = SmokeNet()
 if torch.cuda.device_count() > 1:
     print("Using multiple GPUs")
     smoke = nn.DataParallel(smoke)
-smoke.fit(training_data, validation_data, class_weights)
-y_pred = smoke.predict(testing_data)
+criterion = nn.CrossEntropyLoss(weight=torch.tensor(class_weights, dtype=torch.float32).to(device))
+optimizer = torch.optim.SGD(smoke.parameters(), lr=learn_rate, momentum=0.9)
+
+fit(smoke, optimizer, criterion, training_data, validation_data, class_weights, n_epochs, batch_size)
+y_pred = predict(smoke, testing_data)
 y_pred = torch.cat(y_pred)
 y_pred = torch.argmax(y_pred, axis=1).tolist()
 y_true = testing_data[:][1].tolist()
