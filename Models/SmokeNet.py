@@ -279,7 +279,7 @@ class ResidualAttention(nn.Module):
         # The bottom RA block
         self.soft_mask_branch["ra2"] = make_RA_block(channels, height, width, red_ratio, variant)
         # Final bilinear upsampling interpolation that undoes 'pool1' downsampling
-        self.soft_mask_branch["upsample"] = nn.Upsample(scale_factor=2, mode="bilinear")
+        self.soft_mask_branch["upsample"] = nn.Upsample(scale_factor=2, mode="bilinear", align_corners=False)
         # Final 1x1 convolutions and sigmoid
         self.soft_mask_branch["convs"] = nn.Sequential(
             nn.Conv2d(channels, channels, (1, 1)),
