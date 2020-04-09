@@ -159,7 +159,7 @@ class Spatial_Attention(nn.Module):
 
     def forward(self, x):
         x = x.reshape(-1, self.in_channels, self.H * self.W)
-        s_attn_dist = self.sigmoid(self.conv2(self.relu(self.conv1(x))))
+        s_attn_dist = self.sig(self.conv2(self.relu(self.conv1(x))))
         x = torch.reshape(x * s_attn_dist, (-1, self.in_channels, self.H, self.W))
         return x
 
