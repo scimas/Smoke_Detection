@@ -94,7 +94,7 @@ class SmokeNet(nn.Module):
         if self.optimizer is None:
             self.optimizer = torch.optim.SGD(self.parameters(), lr=self.learn_rate)
         # initialize train and validation data loaders
-        train_loader = DataLoader(train_data, batch_size=32, shuffle=True, num_workers=4, pin_memory=torch.cuda.is_available())
+        train_loader = DataLoader(train_data, batch_size=self.batch_size, shuffle=True, num_workers=4, pin_memory=torch.cuda.is_available())
         validation_loader = DataLoader(validation_data, batch_size=256, shuffle=False, num_workers=4, pin_memory=torch.cuda.is_available())
 
         min_validation_loss = 1e10
