@@ -25,6 +25,9 @@ torch.backends.cudnn.benchmark = False
 class_weights, training_data, validation_data, testing_data = get_datasets()
 
 smoke = SmokeNet()
+if torch.cuda.device_count() > 1:
+    print("Using multiple GPUs")
+    smoke = nn.DataParallel(smoke)
 smoke.fit(training_data, validation_data, class_weights)
 y_pred = smoke.predict(testing_data)
 y_pred = torch.cat(y_pred)
