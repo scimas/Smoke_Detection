@@ -259,7 +259,7 @@ class ResidualAttention(nn.Module):
         # Soft mask branch
         self.soft_mask_branch = nn.ModuleDict()
         # First pooling layer -> downsample to half size
-        self.soft_mask_branch["pool1"] = nn.MaxPool2d((2, 2), padding=(1, 1))
+        self.soft_mask_branch["pool1"] = nn.MaxPool2d((3, 3), stride=(2, 2), padding=(1, 1))
         height, width = height // 2, width // 2
         # First RA block after first downsample
         self.soft_mask_branch["ra1"] = make_RA_block(channels, height, width, red_ratio, variant)
@@ -268,7 +268,7 @@ class ResidualAttention(nn.Module):
         # `n` downsamplers
         downsamplers = nn.ModuleList()
         for i in range(n):
-            downsamplers.append(nn.MaxPool2d((2, 2), padding=(1, 1)))
+            downsamplers.append(nn.MaxPool2d((3, 3), stride=(2, 2), padding=(1, 1)))
             height, width = height // 2, width // 2
             downsamplers.append(make_RA_block(channels, height, width, red_ratio, variant))
         # Sometimes there is an extra RA block before upsamplers.
@@ -281,7 +281,7 @@ class ResidualAttention(nn.Module):
         upsamplers = nn.ModuleList()
         for i in range(n):
             upsamplers.append(make_RA_block(channels, height, width, red_ratio, variant))
-            upsamplers.append(nn.Upsample(scale_factor=2, mode="linear"))
+            upsamplers.append(nn.Upsample(scale_factor=2, mode="bilinear"))
             height, width = height * 2, width * 2
         # Convert the downsamplers, ra_mid and upsamplers into an nn.Sequential
         # Easier to execute in forward
