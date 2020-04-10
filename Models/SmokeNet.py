@@ -7,6 +7,8 @@ import numpy as np
 import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader
+from datetime import datetime
+
 
 
 class SmokeNet(nn.Module):
@@ -19,6 +21,7 @@ class SmokeNet(nn.Module):
         self.optimizer = None
         self.criterion = None
         self.red_ratio = 16
+        self.variant = sc_cs
 
         super(SmokeNet, self).__init__()
         # Initial size of the array 3 x 224 X 224
@@ -85,6 +88,11 @@ class SmokeNet(nn.Module):
         torch.backends.cudnn.deterministic = True
         torch.backends.cudnn.benchmark = False
 
+        print("training and vaidation loss per epoch logged in the file: smokenet_trainlog.log")
+        filename = "smokenet_trainlog_"+ self.variant.upper() + datetime.now().strftime("%Y_%m_%d_%H_%M_%S")+".log"
+        logfile = open(filename, "w")
+
+
         self.to(device)
         if self.criterion is None:
             if class_weights is not None:
@@ -128,8 +136,10 @@ class SmokeNet(nn.Module):
                         'optimizer_state_dict': self.optimizer.state_dict()}, "model_smokenet.pt")
                 else:
                     print("=> Validation loss did not improve")
-                print("Epoch {} | Training loss {:.5f} | Validation Loss {:.5f}".format(epoch, loss_train, validation_loss))
+                print("Epoch {} | Training loss {:.5f} | Validation Loss {:.5f} \n".format(epoch, loss_train, validation_loss))
+                logfile.write("Epoch {} | Training loss {:.5f} | Validation Loss {:.5f} \n".format(epoch, loss_train, validation_loss))
         self.optimizer.zero_grad()
+        logfile.close()
 
     def predict(self, test_data):
         # initialize test data loader
