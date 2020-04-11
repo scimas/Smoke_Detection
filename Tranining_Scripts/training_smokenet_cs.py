@@ -39,7 +39,7 @@ optimizer = torch.optim.SGD(smoke.parameters(), lr=learn_rate, momentum=0.9)
 filename = "Smokenet_trainlog_"+variant.upper()+"_"+datetime.now().strftime("%Y_%m_%d_%H_%M_%S")
 fit(smoke, optimizer, criterion, training_data, validation_data, class_weights, n_epochs, batch_size, filename)
 y_pred = predict(smoke, testing_data)
-y_pred = torch.cat(y_pred)
+y_pred = torch.stack(y_pred)
 y_pred = torch.argmax(y_pred, axis=1).tolist()
 y_true = testing_data[:][1].tolist()
 
