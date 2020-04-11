@@ -27,7 +27,8 @@ class_weights, training_data, validation_data, testing_data = get_datasets()
 learn_rate = 0.01
 n_epochs = 200
 batch_size = 32
-smoke = SmokeNet(sc_cs="CS")
+variant = "CS"
+smoke = SmokeNet(sc_cs=variant)
 smoke.to(device)
 if torch.cuda.device_count() > 1:
     print("Using multiple GPUs")
@@ -35,7 +36,8 @@ if torch.cuda.device_count() > 1:
 criterion = nn.CrossEntropyLoss(weight=torch.tensor(class_weights, dtype=torch.float32).to(device))
 optimizer = torch.optim.SGD(smoke.parameters(), lr=learn_rate, momentum=0.9)
 
-fit(smoke, optimizer, criterion, training_data, validation_data, class_weights, n_epochs, batch_size)
+filename = "Smokenet_trainlog_"+variant.upper()+"_"+datetime.now().strftime("%Y_%m_%d_%H_%M_%S")
+fit(smoke, optimizer, criterion, training_data, validation_data, class_weights, n_epochs, batch_size, filename)
 y_pred = predict(smoke, testing_data)
 y_pred = torch.cat(y_pred)
 y_pred = torch.argmax(y_pred, axis=1).tolist()

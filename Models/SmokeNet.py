@@ -17,7 +17,6 @@ class SmokeNet(nn.Module):
         # Call weight and bias initializer
         # initialize learning rate
         self.red_ratio = 16
-        self.variant = sc_cs
 
         super(SmokeNet, self).__init__()
         # Initial size of the array 3 x 224 X 224
@@ -91,7 +90,7 @@ class SmokeNet(nn.Module):
         return self.layers(x)
 
 
-def fit(model, optimizer, criterion, train_data, validation_data, class_weights=None, n_epochs=100, batch_size=32):
+def fit(model, optimizer, criterion, train_data, validation_data, class_weights=None, n_epochs=100, batch_size=32, filename="model"):
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     torch.manual_seed(42)
     np.random.seed(42)
@@ -102,7 +101,6 @@ def fit(model, optimizer, criterion, train_data, validation_data, class_weights=
     train_loader = DataLoader(train_data, batch_size=batch_size, shuffle=True, num_workers=4, pin_memory=torch.cuda.is_available())
     validation_loader = DataLoader(validation_data, batch_size=256, shuffle=False, num_workers=4, pin_memory=torch.cuda.is_available())
 
-    filename = "Smokenet_trainlog_"+model.variant.upper()+"_"+datetime.now().strftime("%Y_%m_%d_%H_%M_%S")
     logfile = open(filename+".log","w")
     log_df = pd.DataFrame({"Epoch":np.arange(n_epochs), "Training_Loss": np.zeros(n_epochs), "Validation_Loss":np.zeros(n_epochs)})
 
