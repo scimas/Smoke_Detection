@@ -41,7 +41,7 @@ fit(smoke, optimizer, criterion, training_data, validation_data, class_weights, 
 y_pred = predict(smoke, testing_data)
 y_pred = torch.stack(y_pred)
 y_pred = torch.argmax(y_pred, axis=1).tolist()
-y_true = testing_data[:][1].tolist()
+y_true = [testing_data[i][1].item() for i in range(len(testing_data))]
 
 
 print("The cohen kappa score is:", cohen_kappa_score(y_true, y_pred))
