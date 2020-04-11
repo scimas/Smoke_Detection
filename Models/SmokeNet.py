@@ -102,7 +102,7 @@ def fit(model, optimizer, criterion, train_data, validation_data, class_weights=
     train_loader = DataLoader(train_data, batch_size=batch_size, shuffle=True, num_workers=4, pin_memory=torch.cuda.is_available())
     validation_loader = DataLoader(validation_data, batch_size=256, shuffle=False, num_workers=4, pin_memory=torch.cuda.is_available())
 
-    filename = "Smokenet_trailog_"+model.variant.upper()+"_"+datetime.now().strftime("%Y_%m_%d_%H_%M_%S")
+    filename = "Smokenet_trainlog_"+model.variant.upper()+"_"+datetime.now().strftime("%Y_%m_%d_%H_%M_%S")
     logfile = open(filename+".log","w")
     log_df = pd.DataFrame({"Epoch":np.arange(n_epochs), "Training_Loss": np.zeros(n_epochs), "Validation_Loss":np.zeros(n_epochs)})
 
