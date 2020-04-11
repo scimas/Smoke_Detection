@@ -11,14 +11,9 @@ from torch.utils.data import DataLoader
 
 
 class SmokeNet(nn.Module):
-    def __init__(self, learn_rate=0.001, n_epochs=20, batch_size=50, sc_cs="SC"):
+    def __init__(self, sc_cs="SC"):
         # Call weight and bias initializer
         # initialize learning rate
-        self.learn_rate = learn_rate
-        self.n_epochs = n_epochs
-        self.batch_size = batch_size
-        self.optimizer = None
-        self.criterion = None
         self.red_ratio = 16
         self.variant = sc_cs
 
@@ -80,74 +75,66 @@ class SmokeNet(nn.Module):
     def forward(self, x):
         return self.layers(x)
 
-    def fit(self, train_data, validation_data, class_weights=None):
-        device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-        torch.manual_seed(42)
-        np.random.seed(42)
-        torch.backends.cudnn.deterministic = True
-        torch.backends.cudnn.benchmark = False
 
-        self.to(device)
-        if self.criterion is None:
-            if class_weights is not None:
-                self.criterion = nn.CrossEntropyLoss(weight=torch.tensor(class_weights).to(device))
-            else:
-                self.criterion = nn.CrossEntropyLoss()
-        if self.optimizer is None:
-            self.optimizer = torch.optim.SGD(self.parameters(), lr=self.learn_rate)
-        # initialize train and validation data loaders
-        train_loader = DataLoader(train_data, batch_size=64, shuffle=True, num_workers=4, pin_memory=torch.cuda.is_available())
-        validation_loader = DataLoader(validation_data, batch_size=256, shuffle=False, num_workers=4, pin_memory=torch.cuda.is_available())
+def fit(model, optimizer, criterion, train_data, validation_data, class_weights=None, n_epochs=100, batch_size=32):
+    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+    torch.manual_seed(42)
+    np.random.seed(42)
+    torch.backends.cudnn.deterministic = True
+    torch.backends.cudnn.benchmark = False
 
-        min_validation_loss = 1e10
-        print("######The device is: ", device)
-        print("Starting training loop...")
-        for epoch in range(self.n_epochs):
-            loss_train = 0
-            self.train()
-            for i, (images, labels) in enumerate(train_loader):
-                self.optimizer.zero_grad()
-                logits = self.forward(images.to(device))
-                loss = self.criterion(logits, labels.to(device))
-                loss.backward()
-                self.optimizer.step()
-                loss_train += loss.item() * len(labels)
-            # Average training loss. Less meaningful since model is being updated on each minibatch.
-            loss_train /= len(train_loader)
-            with torch.no_grad():
-                validation_loss = 0
-                self.eval()
-                for i, (images, labels) in enumerate(validation_loader):
-                    logits = self.forward(images.to(device))
-                    validation_loss += self.criterion(logits, labels.to(device)).item() * len(labels)
-                # Average validation loss.
-                validation_loss /= len(validation_loader)
-                if validation_loss < min_validation_loss:
-                    min_validation_loss = validation_loss
-                    print("=> Saving a new best")
-                    torch.save({
-                        'model_state_dict': self.state_dict(),
-                        'optimizer_state_dict': self.optimizer.state_dict()}, "model_smokenet.pt")
-                else:
-                    print("=> Validation loss did not improve")
-                print("Epoch {} | Training loss {:.5f} | Validation Loss {:.5f} \n".format(epoch, loss_train, validation_loss))
-                
-        self.optimizer.zero_grad()
+    # initialize train and validation data loaders
+    train_loader = DataLoader(train_data, batch_size=batch_size, shuffle=True, num_workers=4, pin_memory=torch.cuda.is_available())
+    validation_loader = DataLoader(validation_data, batch_size=256, shuffle=False, num_workers=4, pin_memory=torch.cuda.is_available())
 
-
-    def predict(self, test_data):
-        # initialize test data loader
-        test_loader = DataLoader(test_data, batch_size=256, shuffle=False, num_workers=4, pin_memory=torch.cuda.is_available())
-        self.eval()
-        # determine if cuda is available
-        device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-        preds = []
+    min_validation_loss = 1e10
+    print("######The device is: ", device)
+    print("Starting training loop...")
+    for epoch in range(n_epochs):
+        loss_train = 0
+        model.train()
+        for i, (images, labels) in enumerate(train_loader):
+            optimizer.zero_grad()
+            logits = model(images.to(device))
+            loss = criterion(logits, labels.to(device))
+            loss.backward()
+            optimizer.step()
+            loss_train += loss.item() * len(labels)
+        # Average training loss. Less meaningful since model is being updated on each minibatch.
+        loss_train /= len(train_loader)
         with torch.no_grad():
-            for i, (images, labels) in enumerate(test_loader):
-                logits = self.forward(images.to(device))
-                y_pred = nn.functional.softmax(logits).cpu()
-                preds.extend(y_pred)
-        return preds
+            validation_loss = 0
+            model.eval()
+            for i, (images, labels) in enumerate(validation_loader):
+                logits = model(images.to(device))
+                validation_loss += criterion(logits, labels.to(device)).item() * len(labels)
+            # Average validation loss.
+            validation_loss /= len(validation_loader)
+            if validation_loss < min_validation_loss:
+                min_validation_loss = validation_loss
+                print("=> Saving a new best")
+                torch.save({
+                    'model_state_dict': model.state_dict(),
+                    'optimizer_state_dict': optimizer.state_dict()}, "model_smokenet.pt")
+            else:
+                print("=> Validation loss did not improve")
+            print("Epoch {} | Training loss {:.5f} | Validation Loss {:.5f}".format(epoch, loss_train, validation_loss))
+    optimizer.zero_grad()
+
+
+def predict(model, test_data):
+    # initialize test data loader
+    test_loader = DataLoader(test_data, batch_size=256, shuffle=False, num_workers=4, pin_memory=torch.cuda.is_available())
+    model.eval()
+    # determine if cuda is available
+    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+    preds = []
+    with torch.no_grad():
+        for i, (images, labels) in enumerate(test_loader):
+            logits = model(images.to(device))
+            y_pred = nn.functional.softmax(logits).cpu()
+            preds.extend(y_pred)
+    return preds
 
 
 class Spatial_Attention(nn.Module):
@@ -294,7 +281,7 @@ class ResidualAttention(nn.Module):
         # The bottom RA block
         self.soft_mask_branch["ra2"] = make_RA_block(channels, height, width, red_ratio, variant)
         # Final bilinear upsampling interpolation that undoes 'pool1' downsampling
-        self.soft_mask_branch["upsample"] = nn.Upsample(scale_factor=2, mode="bilinear")
+        self.soft_mask_branch["upsample"] = nn.Upsample(scale_factor=2, mode="bilinear", align_corners=False)
         # Final 1x1 convolutions and sigmoid
         self.soft_mask_branch["convs"] = nn.Sequential(
             nn.Conv2d(channels, channels, (1, 1)),
