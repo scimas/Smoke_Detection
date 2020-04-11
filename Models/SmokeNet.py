@@ -7,6 +7,8 @@ import numpy as np
 import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader
+from datetime import datetime
+import pandas as pd
 
 
 
@@ -87,6 +89,12 @@ def fit(model, optimizer, criterion, train_data, validation_data, class_weights=
     train_loader = DataLoader(train_data, batch_size=batch_size, shuffle=True, num_workers=4, pin_memory=torch.cuda.is_available())
     validation_loader = DataLoader(validation_data, batch_size=256, shuffle=False, num_workers=4, pin_memory=torch.cuda.is_available())
 
+    filename = "Smokenet_trailog_"+model.variant.upper()+"_"+datetime.now().strftime("%Y_%m_%d_%H_%M_%S")
+    logfile = open(filename+".log","w")
+    log_df = pd.DataFrame({"Epoch":np.arange(n_epochs), "Training_Loss": np.zeros(n_epochs), "Validation_Loss":np.zeros(n_epochs)})
+
+
+
     min_validation_loss = 1e10
     print("######The device is: ", device)
     print("Starting training loop...")
@@ -119,7 +127,12 @@ def fit(model, optimizer, criterion, train_data, validation_data, class_weights=
             else:
                 print("=> Validation loss did not improve")
             print("Epoch {} | Training loss {:.5f} | Validation Loss {:.5f}".format(epoch, loss_train, validation_loss))
+            logfile.write("Epoch {} | Training loss {:.5f} | Validation Loss {:.5f} \n".format(epoch, loss_train, validation_loss))
+            log_df[epoch,"Training_Loss"] = loss_train
+            log_df[epoch,"Validation_Loss"] = validation_loss
     optimizer.zero_grad()
+    logfile.close()
+    log_df.to_csv(filename+".csv", index=False)
 
 
 def predict(model, test_data):
@@ -210,6 +223,7 @@ class ResidualBlock(nn.Module):
         conv2 = nn.Conv2d(out_channels, out_channels, (3, 3), padding=(1, 1))
         act2 = nn.ReLU()
         self.norm = nn.BatchNorm2d(out_channels)
+        self.act3 = nn.ReLU()
         self.layers = nn.Sequential(
             conv1, act1, norm1, normact, conv2, act2
         )
@@ -217,7 +231,7 @@ class ResidualBlock(nn.Module):
     def forward(self, x):
         out1 = self.shortcut(x)
         out2 = self.layers(x)
-        return self.norm(out1 + out2)
+        return self.act3(self.norm(out1 + out2))
 
 
 def make_RA_block(channels: int, height: int, width: int, red_ratio: int, variant: str):

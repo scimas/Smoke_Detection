@@ -27,7 +27,7 @@ class_weights, training_data, validation_data, testing_data = get_datasets()
 learn_rate = 0.01
 n_epochs = 200
 batch_size = 32
-smoke = SmokeNet()
+smoke = SmokeNet(sc_cs="SC")
 smoke.to(device)
 if torch.cuda.device_count() > 1:
     print("Using multiple GPUs")
