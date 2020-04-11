@@ -11,7 +11,7 @@ import torch.nn as nn
 from sklearn.metrics import cohen_kappa_score, f1_score
 # from sklearn import metrics
 from Models.SmokeNet import SmokeNet, fit, predict
-
+from datetime import datetime
 from Models.SmokeDataset import get_datasets
 
 # Set-up
