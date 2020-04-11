@@ -100,6 +100,9 @@ def fit(model, optimizer, criterion, train_data, validation_data, class_weights=
     train_loader = DataLoader(train_data, batch_size=batch_size, shuffle=True, num_workers=4, pin_memory=torch.cuda.is_available())
     validation_loader = DataLoader(validation_data, batch_size=256, shuffle=False, num_workers=4, pin_memory=torch.cuda.is_available())
 
+    # Reduce learning rate when a metric has stopped improving
+    scheduler = ReduceLROnPlateau(optimizer, 'min')
+
     logfile = open(filename+".log","w")
     log_df = pd.DataFrame({"Epoch":np.arange(n_epochs), "Training_Loss": np.zeros(n_epochs), "Validation_Loss":np.zeros(n_epochs)})
 
@@ -128,6 +131,11 @@ def fit(model, optimizer, criterion, train_data, validation_data, class_weights=
                 validation_loss += criterion(logits, labels.to(device)).item() * len(labels)
             # Average validation loss.
             validation_loss /= len(validation_loader)
+
+            # reduce lr if the validation has stopped improving/decreasing
+            scheduler.step(validation_loss)
+
+            # save the model when the validation_loss has improved/decresaed
             if validation_loss < min_validation_loss:
                 min_validation_loss = validation_loss
                 print("=> Saving a new best")
