@@ -88,11 +88,6 @@ class SmokeNet(nn.Module):
         torch.backends.cudnn.deterministic = True
         torch.backends.cudnn.benchmark = False
 
-        print("training and vaidation loss per epoch logged in the file: smokenet_trainlog.log")
-        filename = "smokenet_trainlog_"+ self.variant.upper() + datetime.now().strftime("%Y_%m_%d_%H_%M_%S")+".log"
-        logfile = open(filename, "w")
-
-
         self.to(device)
         if self.criterion is None:
             if class_weights is not None:
@@ -137,9 +132,9 @@ class SmokeNet(nn.Module):
                 else:
                     print("=> Validation loss did not improve")
                 print("Epoch {} | Training loss {:.5f} | Validation Loss {:.5f} \n".format(epoch, loss_train, validation_loss))
-                logfile.write("Epoch {} | Training loss {:.5f} | Validation Loss {:.5f} \n".format(epoch, loss_train, validation_loss))
+                
         self.optimizer.zero_grad()
-        logfile.close()
+
 
     def predict(self, test_data):
         # initialize test data loader
