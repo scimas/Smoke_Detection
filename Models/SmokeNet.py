@@ -138,8 +138,8 @@ def fit(model, optimizer, criterion, train_data, validation_data, class_weights=
                 print("=> Validation loss did not improve")
             print("Epoch {} | Training loss {:.5f} | Validation Loss {:.5f}".format(epoch, loss_train, validation_loss))
             logfile.write("Epoch {} | Training loss {:.5f} | Validation Loss {:.5f} \n".format(epoch, loss_train, validation_loss))
-            log_df[epoch,"Training_Loss"] = loss_train
-            log_df[epoch,"Validation_Loss"] = validation_loss
+            log_df.loc[epoch,"Training_Loss"] = loss_train
+            log_df.loc[epoch,"Validation_Loss"] = validation_loss
     optimizer.zero_grad()
     logfile.close()
     log_df.to_csv(filename+".csv", index=False)
