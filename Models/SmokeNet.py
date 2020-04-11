@@ -155,7 +155,7 @@ def predict(model, test_data):
     with torch.no_grad():
         for i, (images, labels) in enumerate(test_loader):
             logits = model(images.to(device))
-            y_pred = nn.functional.softmax(logits).cpu()
+            y_pred = nn.functional.softmax(logits, dim=1).cpu()
             preds.extend(y_pred)
     return preds
 
