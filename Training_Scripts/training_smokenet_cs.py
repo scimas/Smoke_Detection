@@ -41,7 +41,7 @@ fit(smoke, optimizer, criterion, training_data, validation_data, class_weights, 
 
 #load the saved model
 
-smoke.load_state_dict(torch.load("model_smokenet.pt"))
+smoke.load_state_dict(torch.load("model_smokenet.pt")["model_state_dict"])
 smoke.to(device)
 
 y_pred = predict(smoke, testing_data)
