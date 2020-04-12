@@ -24,9 +24,9 @@ torch.backends.cudnn.benchmark = False
 
 class_weights, training_data, validation_data, testing_data = get_datasets()
 
-learn_rate = 0.01
+learn_rate = 0.001
 n_epochs = 200
-batch_size = 32
+batch_size = 64
 variant = "CS"
 smoke = SmokeNet(sc_cs=variant)
 smoke.to(device)
