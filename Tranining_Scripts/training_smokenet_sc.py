@@ -34,7 +34,7 @@ if torch.cuda.device_count() > 1:
     print("Using multiple GPUs")
     smoke = nn.DataParallel(smoke)
 criterion = nn.CrossEntropyLoss(weight=torch.tensor(class_weights, dtype=torch.float32).to(device))
-optimizer = torch.optim.SGD(smoke.parameters(), lr=learn_rate, momentum=0.9)
+optimizer = torch.optim.Adam(smoke.parameters(), lr=learn_rate, momentum=0.9)
 
 filename = "Smokenet_trainlog_"+variant.upper()+"_"+datetime.now().strftime("%Y_%m_%d_%H_%M_%S")
 fit(smoke, optimizer, criterion, training_data, validation_data, class_weights, n_epochs, batch_size, filename)
