@@ -41,6 +41,7 @@ fit(smoke, optimizer, criterion, training_data, validation_data, class_weights, 
 
 #load the saved model
 
+smoke = SmokeNet(sc_cs=variant)
 smoke.load_state_dict(torch.load("model_smokenet.pt")["model_state_dict"])
 smoke.to(device)
 

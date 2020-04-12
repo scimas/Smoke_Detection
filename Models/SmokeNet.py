@@ -141,7 +141,7 @@ def fit(model, optimizer, criterion, train_data, validation_data, class_weights=
                 min_validation_loss = validation_loss
                 print("=> Saving a new best")
                 torch.save({
-                    'model_state_dict': model.state_dict(),
+                    'model_state_dict': model.module.state_dict(),
                     'optimizer_state_dict': optimizer.state_dict()}, "model_smokenet.pt")
             else:
                 print("=> Validation loss did not improve")
