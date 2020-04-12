@@ -38,6 +38,12 @@ optimizer = torch.optim.Adam(smoke.parameters(), lr=learn_rate)
 
 filename = "Smokenet_trainlog_"+variant.upper()+"_"+datetime.now().strftime("%Y_%m_%d_%H_%M_%S")
 fit(smoke, optimizer, criterion, training_data, validation_data, class_weights, n_epochs, batch_size, filename)
+
+#load the saved model
+
+smoke.load_state_dict(torch.load("model_smokenet.pt"))
+smoke.to(device)
+
 y_pred = predict(smoke, testing_data)
 y_pred = torch.stack(y_pred)
 y_pred = torch.argmax(y_pred, axis=1).tolist()

@@ -42,7 +42,6 @@ fit(smoke, optimizer, criterion, training_data, validation_data, class_weights, 
 
 
 smoke.load_state_dict(torch.load("model_smokenet.pt"))
-smoke.to(device)
 
 y_pred = predict(smoke, testing_data)
 y_pred = torch.stack(y_pred)
