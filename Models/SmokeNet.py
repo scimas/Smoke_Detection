@@ -102,7 +102,7 @@ def fit(model, optimizer, criterion, train_data, validation_data, class_weights=
     validation_loader = DataLoader(validation_data, batch_size=256, shuffle=False, num_workers=4, pin_memory=torch.cuda.is_available())
 
     # Reduce learning rate when a metric has stopped improving
-    scheduler = ReduceLROnPlateau(optimizer, 'min')
+    scheduler = ReduceLROnPlateau(optimizer, 'min', factor=0.5)
 
     logfile = open(filename+".log","w")
     log_df = pd.DataFrame({"Epoch":np.arange(n_epochs), "Training_Loss": np.zeros(n_epochs), "Validation_Loss":np.zeros(n_epochs)})
