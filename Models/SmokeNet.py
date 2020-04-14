@@ -140,9 +140,14 @@ def fit(model, optimizer, criterion, train_data, validation_data, class_weights=
             if validation_loss < min_validation_loss:
                 min_validation_loss = validation_loss
                 print("=> Saving a new best")
-                torch.save({
-                    'model_state_dict': model.module.state_dict(),
-                    'optimizer_state_dict': optimizer.state_dict()}, "model_smokenet.pt")
+                if hasattr(model, "module"):
+                    torch.save({
+                        'model_state_dict': model.module.state_dict(),
+                        'optimizer_state_dict': optimizer.state_dict()}, "model_smokenet.pt")
+                else:
+                    torch.save({
+                        'model_state_dict': model.state_dict(),
+                        'optimizer_state_dict': optimizer.state_dict()}, "model_smokenet.pt")
             else:
                 print("=> Validation loss did not improve")
             print("Epoch {} | Training loss {:.5f} | Validation Loss {:.5f}".format(epoch, loss_train, validation_loss))
