@@ -272,6 +272,16 @@ def make_RA_block(channels: int, height: int, width: int, red_ratio: int, varian
             Channel_Attention(height, width, channels, red_ratio),
             Spatial_Attention(height, width, channels, red_ratio)
         )
+    elif variant == "c":
+        return nn.Sequential(
+            ResidualBlock(channels, channels, False),
+            Channel_Attention(height, width, channels, red_ratio)
+        )
+    elif variant == "s":
+        return nn.Sequential(
+            ResidualBlock(channels, channels, False),
+            Spatial_Attention(height, width, channels, red_ratio)
+        )
     else:
         raise ValueError("invalid RA block variant, can only be 'sc' or 'cs'")
 
