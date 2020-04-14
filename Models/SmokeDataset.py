@@ -41,9 +41,10 @@ def get_transforms(train=True):
     crop = tf.RandomCrop((224, 224))
     hflip = tf.RandomHorizontalFlip()
     vflip = tf.RandomVerticalFlip()
+    color = tf.ColorJitter(brightness=(0.5, 1.5), contrast=(0.5, 1.5))
     normalize = tf.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
     if train:
-        transforms = tf.Compose([crop, hflip, vflip, pil_to_tensor, normalize])
+        transforms = tf.Compose([crop, hflip, vflip, color, pil_to_tensor, normalize])
     else:
         transforms = tf.Compose([pil_to_tensor, normalize])
     return transforms
