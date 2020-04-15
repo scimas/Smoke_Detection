@@ -1,15 +1,9 @@
-#------------------------------------------ Documentation ---------------------------------
-#   Author : Kshitij Bhat, Mihir Gadgil
-#------------------------------------------------------------------------------------------
-
-# %% ------------------------------------ Importing Libraries -----------------------------
 import numpy as np
+import pandas as pd
 import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader
-import pandas as pd
 from torch.optim.lr_scheduler import ReduceLROnPlateau
-
 
 
 class SmokeNet(nn.Module):
@@ -90,12 +84,8 @@ class SmokeNet(nn.Module):
         return self.layers(x)
 
 
-def fit(model, optimizer, criterion, train_data, validation_data, class_weights=None, n_epochs=100, batch_size=32, filename="model"):
+def fit(model, optimizer, criterion, train_data, validation_data, class_weights=None, n_epochs=100, batch_size=32, model_suffix=""):
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-    torch.manual_seed(42)
-    np.random.seed(42)
-    torch.backends.cudnn.deterministic = True
-    torch.backends.cudnn.benchmark = False
 
     # initialize train and validation data loaders
     train_loader = DataLoader(train_data, batch_size=batch_size, shuffle=True, num_workers=4, pin_memory=torch.cuda.is_available())
@@ -103,11 +93,9 @@ def fit(model, optimizer, criterion, train_data, validation_data, class_weights=
 
     # Reduce learning rate when a metric has stopped improving
     scheduler = ReduceLROnPlateau(optimizer, 'min', factor=0.5)
-
-    logfile = open(filename+".log","w")
-    log_df = pd.DataFrame({"Epoch":np.arange(n_epochs), "Training_Loss": np.zeros(n_epochs), "Validation_Loss":np.zeros(n_epochs)})
-
-
+    model_file = "model_" + model_suffix + ".pt"
+    logfile = open("trainlog_" + model_suffix + ".log", "w")
+    log_df = pd.DataFrame({"Epoch": np.arange(n_epochs), "Training_Loss": np.zeros(n_epochs), "Validation_Loss": np.zeros(n_epochs)})
 
     min_validation_loss = 1e10
     print("######The device is: ", device)
@@ -141,13 +129,15 @@ def fit(model, optimizer, criterion, train_data, validation_data, class_weights=
                 min_validation_loss = validation_loss
                 print("=> Saving a new best")
                 if hasattr(model, "module"):
-                    torch.save({
-                        'model_state_dict': model.module.state_dict(),
-                        'optimizer_state_dict': optimizer.state_dict()}, "model_smokenet.pt")
+                    torch.save(
+                        {'model_state_dict': model.module.state_dict()},
+                        model_file
+                    )
                 else:
-                    torch.save({
-                        'model_state_dict': model.state_dict(),
-                        'optimizer_state_dict': optimizer.state_dict()}, "model_smokenet.pt")
+                    torch.save(
+                        {'model_state_dict': model.state_dict()},
+                        model_file
+                    )
             else:
                 print("=> Validation loss did not improve")
             print("Epoch {} | Training loss {:.5f} | Validation Loss {:.5f}".format(epoch, loss_train, validation_loss))
@@ -156,7 +146,7 @@ def fit(model, optimizer, criterion, train_data, validation_data, class_weights=
             log_df.loc[epoch,"Validation_Loss"] = validation_loss
     optimizer.zero_grad()
     logfile.close()
-    log_df.to_csv(filename+".csv", index=False)
+    log_df.to_csv("traindf_" + model_suffix +".csv", index=False)
 
 
 def predict(model, test_data):
