@@ -165,7 +165,7 @@ def predict(model, test_data):
 
 
 class Spatial_Attention(nn.Module):
-    def __init__(self, H=56, W=56, in_channels=128, red_ratio=16):
+    def __init__(self, H, W, in_channels, red_ratio):
         self.in_channels = in_channels
         self.H = H
         self.W = W
@@ -184,7 +184,7 @@ class Spatial_Attention(nn.Module):
 
 
 class Channel_Attention(nn.Module):
-    def __init__(self, H=56, W=56, in_channels=128, red_ratio=16):
+    def __init__(self, H, W, in_channels, red_ratio):
         self.in_channels = in_channels
         self.H = H
         self.W = W
