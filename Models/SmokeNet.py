@@ -7,10 +7,10 @@ from torch.optim.lr_scheduler import ReduceLROnPlateau
 
 
 class SmokeNet(nn.Module):
-    def __init__(self, sc_cs="SC"):
+    def __init__(self, sc_cs="SC", red_ratio=16):
         # Call weight and bias initializer
         # initialize learning rate
-        self.red_ratio = 16
+        self.red_ratio = red_ratio
 
         super(SmokeNet, self).__init__()
         # Initial size of the array 3 x 224 X 224
