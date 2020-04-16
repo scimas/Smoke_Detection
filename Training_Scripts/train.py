@@ -7,7 +7,7 @@ from datetime import datetime
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
-class_weights, training_data, validation_data, testing_data = get_datasets()
+class_weights, training_data, validation_data = get_datasets(True)
 
 if len(sys.argv) > 1:
     variant = sys.argv[1]

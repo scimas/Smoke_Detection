@@ -50,7 +50,8 @@ def get_transforms(train=True):
     return transforms
 
 
-def get_datasets():
+def get_datasets(train: bool):
+    np.random.seed(42)
     image_path_df = pd.read_csv("Image_Paths.csv")
     label_encoding = {"Cloud": 0, "Dust": 1, "Haze": 2, "Land": 3, "Seaside": 4, "Smoke": 5}
     image_path_df.image_type.replace(label_encoding, inplace=True)
@@ -68,8 +69,10 @@ def get_datasets():
         stratify=image_path_df.image_type[train_valid_indices]
     )
 
-    train_data = SmokeDataset(image_path_df, train_indices, train=True)
-    validation_data = SmokeDataset(image_path_df, valid_indices, train=False)
-    test_data = SmokeDataset(image_path_df, test_indices, train=False)
-
-    return class_weights, train_data, validation_data, test_data
+    if train:
+        train_data = SmokeDataset(image_path_df, train_indices, train=True)
+        validation_data = SmokeDataset(image_path_df, valid_indices, train=False)
+        return class_weights, train_data, validation_data
+    else:
+        test_data = SmokeDataset(image_path_df, test_indices, train=False)
+        return test_data

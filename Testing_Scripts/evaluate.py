@@ -6,7 +6,7 @@ from Models.SmokeDataset import get_datasets
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
-class_weights, training_data, validation_data, testing_data = get_datasets()
+testing_data = get_datasets(False)
 
 variant = sys.argv[1]
 fname = sys.argv[2]
