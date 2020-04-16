@@ -12,6 +12,7 @@ variant = sys.argv[1]
 fname = sys.argv[2]
 model = SmokeNet(variant)
 model.load_state_dict(torch.load(fname)["model_state_dict"])
+model.to(device)
 
 y_pred = predict(model, testing_data)
 y_pred = torch.stack(y_pred)
