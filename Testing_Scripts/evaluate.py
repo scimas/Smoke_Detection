@@ -1,6 +1,6 @@
 import sys
 import torch
-from sklearn.metrics import cohen_kappa_score, confusion_matrix, f1_score
+from sklearn.metrics import accuracy_score, cohen_kappa_score, confusion_matrix, f1_score
 from Models.SmokeNet import SmokeNet, predict
 from Models.SmokeDataset import get_datasets
 
@@ -21,5 +21,6 @@ y_true = [testing_data[i][1].item() for i in range(len(testing_data))]
 
 print("The cohen kappa score: ", cohen_kappa_score(y_true, y_pred))
 print("The f1_score score: ", f1_score(y_true, y_pred, average="macro"))
+print("The accuracy: ", accuracy_score(y_true, y_pred))
 print("The confusion matrix:")
 print(confusion_matrix(y_true, y_pred))
