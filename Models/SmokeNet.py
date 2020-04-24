@@ -21,11 +21,11 @@ class SmokeNet(nn.Module):
         # First block
         block1 = nn.Sequential(
             nn.Conv2d(64, 64, kernel_size=(1, 1)),
-            nn.ReLU(),
+            nn.BatchNorm2d(64),
             nn.Conv2d(64, 64, kernel_size=(3, 3), padding=(1, 1)),
-            nn.ReLU(),
+            nn.BatchNorm2d(64),
             nn.Conv2d(64, 256, kernel_size=(1, 1)), # 256 X 56 X 56
-            nn.ReLU()
+            nn.BatchNorm2d(256)
         )
 
         ra1 = ResidualAttention(channels=256, height=56, width=56, n=2, red_ratio=self.red_ratio, variant=sc_cs)
@@ -33,11 +33,11 @@ class SmokeNet(nn.Module):
         # Second block
         block2 = nn.Sequential(
             nn.Conv2d(256, 128, kernel_size=(1, 1), stride=(2, 2)),
-            nn.ReLU(),
+            nn.BatchNorm2d(128),
             nn.Conv2d(128, 128, kernel_size=(3, 3), padding=(1, 1)),
-            nn.ReLU(),
+            nn.BatchNorm2d(128),
             nn.Conv2d(128, 512, kernel_size=(1, 1)), # 512 X 28 X 28
-            nn.ReLU()
+            nn.BatchNorm2d(512)
         )
 
         ra2 = ResidualAttention(channels=512, height=28, width=28, n=1, red_ratio=self.red_ratio, variant=sc_cs)
@@ -45,11 +45,11 @@ class SmokeNet(nn.Module):
         # Third block
         block3 = nn.Sequential(
             nn.Conv2d(512, 256, kernel_size=(1, 1), stride=(2, 2)),
-            nn.ReLU(),
+            nn.BatchNorm2d(256),
             nn.Conv2d(256, 256, kernel_size=(3, 3), padding=(1, 1)),
-            nn.ReLU(),
+            nn.BatchNorm2d(256),
             nn.Conv2d(256, 1024, kernel_size=(1, 1)), # 1024 x 14 x 14
-            nn.ReLU()
+            nn.BatchNorm2d(1024)
         )
 
         ra3 = ResidualAttention(channels=1024, height=14, width=14, n=0, red_ratio=self.red_ratio, variant=sc_cs)
@@ -57,11 +57,11 @@ class SmokeNet(nn.Module):
         # Fourth Block
         block4 = nn.Sequential(
             nn.Conv2d(1024, 512, kernel_size=(1, 1), stride=(2, 2)),
-            nn.ReLU(),
+            nn.BatchNorm2d(512),
             nn.Conv2d(512, 512, kernel_size=(3, 3), padding=(1, 1)),
-            nn.ReLU(),
+            nn.BatchNorm2d(512),
             nn.Conv2d(512, 2048, kernel_size=(1, 1)), # 2048 x 7 x 7
-            nn.ReLU()
+            nn.BatchNorm2d(2048)
         )
 
         # Final average pool 7 x 7, stride 1
