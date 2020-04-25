@@ -11,6 +11,7 @@ class SmokeNet(nn.Module):
         # Call weight and bias initializer
         # initialize learning rate
         self.red_ratio = red_ratio
+        self.variant = sc_cs
 
         super(SmokeNet, self).__init__()
         # Initial size of the array 3 x 224 X 224
@@ -130,12 +131,14 @@ def fit(model, optimizer, criterion, train_data, validation_data, class_weights=
                 print("=> Saving a new best")
                 if hasattr(model, "module"):
                     torch.save(
-                        {'model_state_dict': model.module.state_dict()},
+                        {'model_state_dict': model.module.state_dict(),
+                        'variant': model.module.variant},
                         model_file
                     )
                 else:
                     torch.save(
-                        {'model_state_dict': model.state_dict()},
+                        {'model_state_dict': model.state_dict()
+                        'variant': model.variant},
                         model_file
                     )
             else:

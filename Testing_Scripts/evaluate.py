@@ -8,10 +8,11 @@ device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 testing_data = get_datasets(False)
 
-variant = sys.argv[1]
-fname = sys.argv[2]
+fname = sys.argv[1]
+sd = torch.load(fname)
+variant = sd["variant"]
 model = SmokeNet(variant)
-model.load_state_dict(torch.load(fname)["model_state_dict"])
+model.load_state_dict(sd["model_state_dict"])
 model.to(device)
 
 y_pred = predict(model, testing_data)
