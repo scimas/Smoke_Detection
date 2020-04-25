@@ -22,9 +22,9 @@ a model file called `model_<variant>_<suffix>.pt`, a training log file and a
 From within the repository:
 
 ```
-python3 -m Testing_Scripts.evaluate <variant> <filename>
+python3 -m Testing_Scripts.evaluate <filename>
 ```
 
-`<variant>` is the same as in the training part. `<filename>` is the saved model
-file's name. It will print out Cohen's Kappa, F-1 score (macro averaged),
+`<filename>` is the saved model file's name. The model variant will be taken
+from the file.It will print out Cohen's Kappa, F-1 score (macro averaged),
 accuracy score and the confusion matrix.
