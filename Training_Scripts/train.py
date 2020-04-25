@@ -22,13 +22,14 @@ else:
 learn_rate = 0.0001
 decay = 1.0
 n_epochs = 200
-batch_size = 64
+batch_size = 16
 model = SmokeNet(sc_cs=variant)
 model.to(device)
 
 if torch.cuda.device_count() > 1:
     print("Using multiple GPUs")
     model = nn.DataParallel(model)
+    batch_size *= torch.cuda.device_count()
 
 criterion = nn.CrossEntropyLoss(weight=torch.tensor(class_weights, dtype=torch.float32).to(device))
 optimizer = torch.optim.AdamW(model.parameters(), lr=learn_rate, weight_decay=decay)
