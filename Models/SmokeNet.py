@@ -137,7 +137,7 @@ def fit(model, optimizer, criterion, train_data, validation_data, class_weights=
                     )
                 else:
                     torch.save(
-                        {'model_state_dict': model.state_dict()
+                        {'model_state_dict': model.state_dict(),
                         'variant': model.variant},
                         model_file
                     )
