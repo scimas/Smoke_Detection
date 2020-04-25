@@ -9,9 +9,12 @@ device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 class_weights, training_data, validation_data = get_datasets(True)
 
-if len(sys.argv) > 1:
+if len(sys.argv) > 2:
     variant = sys.argv[1]
     model_suffix = variant + "_" + sys.argv[2]
+elif len(sys.argv) > 1:
+    variant = sys.argv[1]
+    model_suffix = variant
 else:
     variant = "sc"
     model_suffix = variant + "_" + datetime.now().strftime("%Y_%m_%d_%H_%M_%S")
