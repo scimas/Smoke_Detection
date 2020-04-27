@@ -1,7 +1,7 @@
 import sys
 import torch
 from torch import nn
-from Models.SmokeNet import SatelliteNet, fit
+from Models.SatelliteNet import SatelliteNet, fit
 from Models.SmokeDataset import get_datasets
 from datetime import datetime
 

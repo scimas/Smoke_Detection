@@ -1,7 +1,7 @@
 import sys
 import torch
 from sklearn.metrics import accuracy_score, cohen_kappa_score, confusion_matrix, f1_score
-from Models.SmokeNet import SatelliteNet, predict
+from Models.SatelliteNet import SatelliteNet, predict
 from Models.SmokeDataset import get_datasets
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
