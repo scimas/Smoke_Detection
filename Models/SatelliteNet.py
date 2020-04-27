@@ -31,9 +31,11 @@ class SatelliteNet(nn.Module):
 
         ra1 = ResidualAttention(channels=256, height=56, width=56, n=2, red_ratio=self.red_ratio, variant=sc_cs)
 
+        pool1 = nn.MaxPool2d(kernel_size=(2,2), stride=(2,2))
+
         # Second block
         block2 = nn.Sequential(
-            nn.Conv2d(256, 128, kernel_size=(1, 1), stride=(2, 2)),
+            nn.Conv2d(256, 128, kernel_size=(1, 1)),
             nn.BatchNorm2d(128),
             nn.Conv2d(128, 128, kernel_size=(3, 3), padding=(1, 1)),
             nn.BatchNorm2d(128),
@@ -43,9 +45,11 @@ class SatelliteNet(nn.Module):
 
         ra2 = ResidualAttention(channels=512, height=28, width=28, n=1, red_ratio=self.red_ratio, variant=sc_cs)
 
+        pool2 = nn.MaxPool2d(kernel_size=(2,2), stride=(2,2))
+
         # Third block
         block3 = nn.Sequential(
-            nn.Conv2d(512, 256, kernel_size=(1, 1), stride=(2, 2)),
+            nn.Conv2d(512, 256, kernel_size=(1, 1)),
             nn.BatchNorm2d(256),
             nn.Conv2d(256, 256, kernel_size=(3, 3), padding=(1, 1)),
             nn.BatchNorm2d(256),
@@ -55,9 +59,11 @@ class SatelliteNet(nn.Module):
 
         ra3 = ResidualAttention(channels=1024, height=14, width=14, n=0, red_ratio=self.red_ratio, variant=sc_cs)
 
+        pool3 = nn.MaxPool2d(kernel_size=(2,2), stride=(2,2))
+
         # Fourth Block
         block4 = nn.Sequential(
-            nn.Conv2d(1024, 512, kernel_size=(1, 1), stride=(2, 2)),
+            nn.Conv2d(1024, 512, kernel_size=(1, 1)),
             nn.BatchNorm2d(512),
             nn.Conv2d(512, 512, kernel_size=(3, 3), padding=(1, 1)),
             nn.BatchNorm2d(512),
@@ -74,9 +80,9 @@ class SatelliteNet(nn.Module):
 
         self.layers = nn.Sequential(
             top_conv, top_act, top_pool,
-            block1, ra1,
-            block2, ra2,
-            block3, ra3,
+            block1, ra1, pool1,
+            block2, ra2, pool2,
+            block3, ra3, pool3,
             block4, last_pool,
             flat, fc
         )
