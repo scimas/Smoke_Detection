@@ -1,7 +1,7 @@
 import sys
 import torch
 from torch import nn
-from Models.SmokeNet import SmokeNet, fit
+from Models.SmokeNet import SatelliteNet, fit
 from Models.SmokeDataset import get_datasets
 from datetime import datetime
 
@@ -23,7 +23,7 @@ learn_rate = 0.0001
 decay = 1.0
 n_epochs = 200
 batch_size = 16
-model = SmokeNet(sc_cs=variant)
+model = SatelliteNet(sc_cs=variant)
 model.to(device)
 
 if torch.cuda.device_count() > 1:

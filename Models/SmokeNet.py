@@ -6,14 +6,14 @@ from torch.utils.data import DataLoader
 from torch.optim.lr_scheduler import ReduceLROnPlateau
 
 
-class SmokeNet(nn.Module):
+class SatelliteNet(nn.Module):
     def __init__(self, sc_cs="SC", red_ratio=16):
         # Call weight and bias initializer
         # initialize learning rate
         self.red_ratio = red_ratio
         self.variant = sc_cs
 
-        super(SmokeNet, self).__init__()
+        super(SatelliteNet, self).__init__()
         # Initial size of the array 3 x 224 X 224
         top_conv = nn.Conv2d(3, 64, kernel_size=(7, 7), stride=(2, 2), padding=(3, 3)) # 64 x 112 x 112
         top_act = nn.ReLU()

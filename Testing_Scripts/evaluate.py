@@ -1,7 +1,7 @@
 import sys
 import torch
 from sklearn.metrics import accuracy_score, cohen_kappa_score, confusion_matrix, f1_score
-from Models.SmokeNet import SmokeNet, predict
+from Models.SmokeNet import SatelliteNet, predict
 from Models.SmokeDataset import get_datasets
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
@@ -11,7 +11,7 @@ testing_data = get_datasets(False)
 fname = sys.argv[1]
 sd = torch.load(fname)
 variant = sd["variant"]
-model = SmokeNet(variant)
+model = SatelliteNet(variant)
 model.load_state_dict(sd["model_state_dict"])
 model.to(device)
 
