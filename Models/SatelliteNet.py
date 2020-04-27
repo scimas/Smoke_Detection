@@ -31,7 +31,7 @@ class SatelliteNet(nn.Module):
 
         ra1 = ResidualAttention(channels=256, height=56, width=56, n=2, red_ratio=self.red_ratio, variant=sc_cs)
 
-        pool1 = nn.MaxPool2d(kernel_size=(2,2), stride=(2,2))
+        pool1 = nn.MaxPool2d(kernel_size=(2, 2), stride=(2, 2))
 
         # Second block
         block2 = nn.Sequential(
@@ -45,7 +45,7 @@ class SatelliteNet(nn.Module):
 
         ra2 = ResidualAttention(channels=512, height=28, width=28, n=1, red_ratio=self.red_ratio, variant=sc_cs)
 
-        pool2 = nn.MaxPool2d(kernel_size=(2,2), stride=(2,2))
+        pool2 = nn.MaxPool2d(kernel_size=(2, 2), stride=(2, 2))
 
         # Third block
         block3 = nn.Sequential(
@@ -59,7 +59,7 @@ class SatelliteNet(nn.Module):
 
         ra3 = ResidualAttention(channels=1024, height=14, width=14, n=0, red_ratio=self.red_ratio, variant=sc_cs)
 
-        pool3 = nn.MaxPool2d(kernel_size=(2,2), stride=(2,2))
+        pool3 = nn.MaxPool2d(kernel_size=(2, 2), stride=(2, 2))
 
         # Fourth Block
         block4 = nn.Sequential(
@@ -138,24 +138,24 @@ def fit(model, optimizer, criterion, train_data, validation_data, class_weights=
                 if hasattr(model, "module"):
                     torch.save(
                         {'model_state_dict': model.module.state_dict(),
-                        'variant': model.module.variant},
+                         'variant': model.module.variant},
                         model_file
                     )
                 else:
                     torch.save(
                         {'model_state_dict': model.state_dict(),
-                        'variant': model.variant},
+                         'variant': model.variant},
                         model_file
                     )
             else:
                 print("=> Validation loss did not improve")
             print("Epoch {} | Training loss {:.5f} | Validation Loss {:.5f}".format(epoch, loss_train, validation_loss))
             logfile.write("Epoch {} | Training loss {:.5f} | Validation Loss {:.5f} \n".format(epoch, loss_train, validation_loss))
-            log_df.loc[epoch,"Training_Loss"] = loss_train
-            log_df.loc[epoch,"Validation_Loss"] = validation_loss
+            log_df.loc[epoch, "Training_Loss"] = loss_train
+            log_df.loc[epoch, "Validation_Loss"] = validation_loss
     optimizer.zero_grad()
     logfile.close()
-    log_df.to_csv("traindf_" + model_suffix +".csv", index=False)
+    log_df.to_csv("traindf_" + model_suffix + ".csv", index=False)
 
 
 def predict(model, test_data):
