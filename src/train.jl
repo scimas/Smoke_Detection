@@ -53,8 +53,8 @@ X_train = load_images(paths_train)
 X_valid = load_images(paths_valid)
 
 map!(img -> imresize(img, 230, 230), X_train, X_train)
-train_dataset = Dataset((X_train, y_train); transforms=train_transforms(), batchsize=16)
-valid_dataset = Dataset((X_valid, y_valid); transforms=test_transforms(), batchsize=32)
+train_dataset = Dataset(X_train, y_train; transforms=train_transforms(), batchsize=16)
+valid_dataset = Dataset(X_valid, y_valid; transforms=test_transforms(), batchsize=32)
 
 model = SatelliteNet("s")
 optimizer = Flux.Optimise.ADAMW(η=0.0001f0, decay=1.0f0)

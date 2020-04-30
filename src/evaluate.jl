@@ -33,7 +33,7 @@ paths_train, y_train, paths_valid, y_valid, paths_test, y_test, weights = split_
 X_test = load_images(paths_test)
 
 map!(img -> imresize(img, 230, 230), X_test, X_test)
-test_dataset = Dataset((X_test, y_test); transforms=test_transforms(), batchsize=32)
+test_dataset = Dataset(X_test, y_test; transforms=test_transforms(), batchsize=32)
 
 model = BSON.load("model.bson")[:model]
 testmode!(model)
