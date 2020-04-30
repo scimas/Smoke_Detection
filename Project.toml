@@ -1,0 +1,10 @@
+[deps]
+BSON = "fbb218c0-5317-5bc6-957e-2ee96dd4b1f0"
+CuArrays = "3a865a2d-5b23-5a0f-bc46-62713ec82fae"
+DeepLearningModels = "853d01d0-ec8a-4b57-88b4-ee7d72168b7d"
+FileIO = "5789e2e9-d7fb-5bc7-8068-2c6fae9b9549"
+Flux = "587475ba-b771-5e3f-ad9e-33799f191a9c"
+ImageTransforms = "853c8441-6c1d-45e7-bdb7-6113766cb892"
+Images = "916415d5-f1e6-5110-898d-aaa5f9f070e0"
+MLDataUtils = "cc2ba9b6-d476-5e6d-8eaf-a92d5412d41d"
+Metrics = "819086d7-c981-4f51-835b-9494c1a6708c"
