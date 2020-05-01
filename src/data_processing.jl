@@ -79,11 +79,13 @@ function train_transforms()
     crop((img, y)) = (ImageTransforms.random_crop(img, (224, 224)), y)
     hflip((img, y)) = (ImageTransforms.random_horizontal_flip(img), y)
     vflip((img, y)) = (ImageTransforms.random_vertical_flip(img), y)
+    im2array((img, y)) = (ImageTransforms.img2array(img), y)
     normalise((img, y)) = (ImageTransforms.Normalizer(0.5, 0.5)(img), y)
-    ∘(reverse([crop, hflip, vflip, ImageTransforms.img2array, normalise])...)
+    ∘(reverse([crop, hflip, vflip, im2array, normalise])...)
 end
 
 function test_transforms()
+    im2array((img, y)) = (ImageTransforms.img2array(img), y)
     normalise((img, y)) = (ImageTransforms.Normalizer(0.5, 0.5)(img), y)
-    ∘(reverse([ImageTransforms.img2array, normalise])...)
+    ∘(reverse([im2array, normalise])...)
 end
