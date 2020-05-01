@@ -53,6 +53,10 @@ X_train = load_images(paths_train)
 X_valid = load_images(paths_valid)
 
 map!(img -> imresize(img, 230, 230), X_train, X_train)
+map!(img -> imresize(img, 224, 224), X_valid, X_valid)
+X_train = reduce((x, y) -> cat(x, y; dims=3), X_train)
+X_valid = reduce((x, y) -> cat(x, y; dims=3), X_valid)
+
 train_dataset = Dataset(X_train, y_train; transforms=train_transforms(), batchsize=16)
 valid_dataset = Dataset(X_valid, y_valid; transforms=test_transforms(), batchsize=32)
 

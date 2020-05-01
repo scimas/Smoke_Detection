@@ -85,5 +85,5 @@ end
 
 function test_transforms()
     normalise((img, y)) = (ImageTransforms.Normalizer(0.5, 0.5)(img), y)
-    normalise
+    ∘(reverse([ImageTransforms.img2array, normalise])...)
 end
