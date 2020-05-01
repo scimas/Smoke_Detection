@@ -57,7 +57,7 @@ train_dataset = Dataset(X_train, y_train; transforms=train_transforms(), batchsi
 valid_dataset = Dataset(X_valid, y_valid; transforms=test_transforms(), batchsize=32)
 
 model = SatelliteNet("s")
-optimizer = Flux.Optimise.ADAMW(η=0.0001f0, decay=1.0f0)
+optimizer = Flux.Optimise.ADAMW(0.0001, (0.9, 0.999), 1.0)
 loss(ŷ, y, w) = Flux.logitcrossentropy(ŷ, y, w)
 
 train!(model, loss, optimizer, train_dataset, valid_dataset; class_weights=weights)
