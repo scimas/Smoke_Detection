@@ -80,7 +80,7 @@ function train_transforms()
     hflip((img, y)) = (ImageTransforms.random_horizontal_flip(img), y)
     vflip((img, y)) = (ImageTransforms.random_vertical_flip(img), y)
     normalise((img, y)) = (ImageTransforms.Normalizer(0.5, 0.5)(img), y)
-    ((img, y)) -> crop |> hflip |> vflip |> ImageTransforms.img2array |> normalise
+    ∘(reverse([crop, hflip, vflip, ImageTransforms.img2array, normalise])...)
 end
 
 function test_transforms()
