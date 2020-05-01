@@ -50,7 +50,7 @@ function Dataset(data...; transforms=identity, batchsize=1, shuffle=true)
 end
 
 function Base.getindex(dataset::Dataset, idx)
-    1 <= idx <= dataset.n_obs || throw(BoundsError(dataset.data[1], idx))
+    checkindex(Bool, 1:dataset.n_obs, idx) || throw(BoundsError(dataset.data[1], idx))
     dataset.transforms(Tuple(x[(Colon() for _ in 2:ndims(x))..., dataset.indices[idx]] for x in dataset.data))
 end
 
